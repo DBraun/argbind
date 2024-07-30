@@ -25,8 +25,8 @@ if __name__ == "__main__":
     argbind.parse_args() # add for help text, though it isn't used here.
 
     args = {
-      'MyClass.x': 'from binding',
-      'pattern/MyClass.x': 'from binding in scoping pattern',
+      'BoundClass.x': 'from binding',
+      'pattern/BoundClass.x': 'from binding in scoping pattern',
       'my_func.x': 123,
       'args.debug': True # for printing arguments passed to each function
     }

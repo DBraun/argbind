@@ -99,11 +99,18 @@ def bind(*args, without_prefix=False, positional=False, group: Union[list, str] 
 
     def decorator(object_or_func):
         func = object_or_func
+        prefix = func.__qualname__  # get prefix before a potential monkey patch below changes it to a superclass's prefix
         is_class = inspect.isclass(func)
         if is_class:
+            # If the class has no __init__ method, find the __init__ method from the closest superclass
+            # that defines one. Then monkey patch that __init__ onto the class.
+            if '__init__' not in func.__dict__:
+                for base in func.__mro__[1:]:
+                    if '__init__' in base.__dict__:
+                        func.__init__ = base.__init__  # monkey patch
+                        break
             func = getattr(func, "__init__")            
 
-        prefix = func.__qualname__
         if "__init__" in prefix:
             prefix = prefix.split(".")[0]
         
