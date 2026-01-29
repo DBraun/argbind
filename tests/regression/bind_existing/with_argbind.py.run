@@ -3,7 +3,7 @@ from default
 100
 
 Bound objects output
-MyClass(
+BoundClass(
   x : str = from binding
 )
 from binding
@@ -13,7 +13,7 @@ my_func(
 123
 
 Bound objects inside scoping pattern output
-MyClass(
+BoundClass(
   # scope = pattern
   x : str = from binding in scoping pattern
 )

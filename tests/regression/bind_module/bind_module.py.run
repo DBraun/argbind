@@ -4,6 +4,9 @@ ASGD(
 Adadelta(
   lr : float = 0.0002
 )
+Adafactor(
+  lr : float = 0.0002
+)
 Adagrad(
   lr : float = 0.0002
 )

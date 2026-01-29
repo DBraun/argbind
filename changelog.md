@@ -1,4 +1,15 @@
 # Changelog
+## v0.4.0
+- **Major enhancement**: Boolean arguments with defaults now support flexible syntax!
+  - Use flag-style: `--func.arg` sets to `True`
+  - Use value-style: `--func.arg=0/1/true/false/True/False` to set to any boolean value
+  - Both syntaxes work from command line and `.yml` files
+  - Removes the previous limitation where booleans set to `True` in `.yml` files couldn't be overridden from command line
+  - Boolean arguments **without defaults** still use flag-only syntax for backwards compatibility
+- Added `Optional[bool]` type support with `str_to_bool` converter class
+- Added comprehensive tests for boolean flexibility
+- Updated all documentation to reflect new boolean behavior
+
 ## v0.3.3
 - Allow `argbind.load_args` to take in an already open filestream.
 

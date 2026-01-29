@@ -1,0 +1,17 @@
+usage: bool_example.py [-h] [--args.save ARGS.SAVE] [--args.load ARGS.LOAD]
+                       [--args.debug ARGS.DEBUG] [--Example.on [EXAMPLE.ON]]
+                       [--Example.off [EXAMPLE.OFF]]
+
+options:
+  -h, --help            show this help message and exit
+  --args.save ARGS.SAVE
+                        Path to save all arguments used to run script to.
+  --args.load ARGS.LOAD
+                        Path to load arguments from, stored as a .yml file.
+  --args.debug ARGS.DEBUG
+                        Print arguments as they are passed to each function.
+
+Generated arguments for function Example:
+
+  --Example.on [EXAMPLE.ON]
+  --Example.off [EXAMPLE.OFF]

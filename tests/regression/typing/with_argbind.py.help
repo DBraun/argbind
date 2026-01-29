@@ -4,7 +4,8 @@ usage: with_argbind.py [-h] [--args.save ARGS.SAVE] [--args.load ARGS.LOAD]
                        [--func.dict_arg FUNC.DICT_ARG]
                        [--func.list_int_arg FUNC.LIST_INT_ARG]
                        [--func.list_str_arg FUNC.LIST_STR_ARG]
-                       [--func.bool_arg] [--func.tuple_arg FUNC.TUPLE_ARG]
+                       [--func.bool_arg [FUNC.BOOL_ARG]]
+                       [--func.tuple_arg FUNC.TUPLE_ARG]
 
 options:
   -h, --help            show this help message and exit
@@ -22,5 +23,5 @@ Generated arguments for function func:
   --func.dict_arg FUNC.DICT_ARG
   --func.list_int_arg FUNC.LIST_INT_ARG
   --func.list_str_arg FUNC.LIST_STR_ARG
-  --func.bool_arg
+  --func.bool_arg [FUNC.BOOL_ARG]
   --func.tuple_arg FUNC.TUPLE_ARG

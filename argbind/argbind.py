@@ -1,7 +1,7 @@
 import inspect
 from contextlib import contextmanager
 import argparse
-from typing import List, Dict, Union
+from typing import List, Dict, Union, get_origin, get_args
 import docstring_parser
 import textwrap
 import yaml
@@ -11,6 +11,7 @@ from pathlib import Path
 import ast
 from functools import wraps
 import warnings
+from dataclasses import _HAS_DEFAULT_FACTORY_CLASS
 
 PARSE_FUNCS = {}
 ARGS = {}
@@ -128,14 +129,16 @@ def bind(*args, without_prefix=False, positional=False, group: Union[list, str] 
             cmd_kwargs = {}
             pos_kwargs = {parameters[i][0]: arg for i, arg in enumerate(args)}
 
-            for key, val in parameters:
-                arg_val = val.default
+            for key, param in parameters:
+                arg_val = param.default
                 if arg_val is not inspect.Parameter.empty or positional:
                     arg_name = f'{prefix}.{key}' if not without_prefix else f'{key}'
                     if arg_name in ARGS and key not in kwargs:
                         val = ARGS[arg_name]
                         if key in pos_kwargs:
                             val = pos_kwargs[key]
+                        # Cast value to the expected type (important for YAML-loaded values)
+                        val = _cast_value(val, param.annotation)
                         cmd_kwargs[key] = val
                         use_key = arg_name
                         if PATTERN:
@@ -222,9 +225,17 @@ def dump_args(args, output_path):
     """
     path = Path(output_path)
     os.makedirs(path.parent, exist_ok=True)
+
+    # Filter out _HAS_DEFAULT_FACTORY_CLASS sentinel values
+    filtered_args = {}
+    for key, value in args.items():
+        # Skip if value is an instance of _HAS_DEFAULT_FACTORY_CLASS
+        if type(value) is not _HAS_DEFAULT_FACTORY_CLASS:
+            filtered_args[key] = value
+
     with open(path, 'w') as f:
         yaml.Dumper.ignore_aliases = lambda *args : True
-        x = yaml.dump(args, Dumper=yaml.Dumper)
+        x = yaml.dump(filtered_args, Dumper=yaml.Dumper)
         prev_line = None
         output = []
         for line in x.split('\n'):
@@ -324,6 +335,89 @@ class str_to_dict():
 
         return _values
 
+class str_to_bool():
+    def __init__(self):
+        pass
+
+    def __call__(self, value):
+        """Convert string or int to bool.
+
+        Accepts: 0, 1, 'true', 'false', 'True', 'False'
+        """
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int):
+            return bool(value)
+        if value.lower() in ('true', '1'):
+            return True
+        if value.lower() in ('false', '0'):
+            return False
+        raise ValueError(f"Cannot convert {value} to bool")
+
+def _unwrap_optional(arg_type):
+    """Unwrap Optional[X] to X, return None if not Optional.
+
+    Args:
+        arg_type: Type annotation to check
+
+    Returns:
+        The inner type if arg_type is Optional[X], otherwise None
+    """
+    origin = get_origin(arg_type)
+    if origin is Union:
+        args = get_args(arg_type)
+        # Check if this is Optional[X] (i.e., Union[X, None])
+        if len(args) == 2 and type(None) in args:
+            # Return the non-None type
+            return args[0] if args[1] is type(None) else args[1]
+    return None
+
+def _cast_value(value, target_type):
+    """Cast a value to the target type if needed.
+
+    This is used when loading values from YAML files to ensure they match
+    the expected type from function signatures.
+
+    Args:
+        value: The value to cast
+        target_type: The target type annotation
+
+    Returns:
+        The value cast to the target type, or the original value if already correct type
+    """
+    # If target_type is not specified, return as-is
+    if target_type is inspect.Parameter.empty:
+        return value
+
+    # Unwrap Optional[X] to X if needed
+    unwrapped = _unwrap_optional(target_type)
+    if unwrapped is not None:
+        target_type = unwrapped
+
+    # Handle None values
+    if value is None:
+        return value
+
+    # Check if value is already the right type (only for non-generic types)
+    # Avoid isinstance() with generic types like List[int] which raises TypeError
+    try:
+        if isinstance(value, target_type):
+            return value
+    except TypeError:
+        # Generic types like List[int], Dict[str, int] can't be used with isinstance
+        pass
+
+    # Try to cast to the target type
+    try:
+        # For basic types (int, float, str, bool), use the type directly
+        if target_type in (int, float, str, bool):
+            return target_type(value)
+        # For other types (including generics), return as-is and let Python handle it
+        return value
+    except (ValueError, TypeError):
+        # If casting fails, return the original value
+        return value
+
 def build_parser(group: Union[list, str] = "default"):
     """Builds the argument parser from all of the bound functions.
 
@@ -408,23 +502,38 @@ def build_parser(group: Union[list, str] = "default"):
                     inner_types = [str, int, float, bool]
                     list_types = [List[x] for x in inner_types]
 
-                    if arg_type is bool:
-                        f.add_argument(arg_name, action='store_true', 
-                            help=arg_help[arg_name])
-                    elif arg_type in list_types:
-                        _type = inner_types[list_types.index(arg_type)]
-                        f.add_argument(arg_name, type=str_to_list(_type), 
+                    # Check if the type is Optional[X] and unwrap it
+                    unwrapped_type = _unwrap_optional(arg_type)
+                    is_optional = unwrapped_type is not None
+                    effective_type = unwrapped_type if is_optional else arg_type
+
+                    if effective_type is bool:
+                        # For bool with a default, support both flag and value syntax:
+                        # --Example.on      -> True (uses const)
+                        # --Example.on=1    -> True (uses type converter)
+                        # --Example.on=0    -> False (uses type converter)
+                        # (nothing)         -> default value
+                        if is_optional or arg_val is not inspect.Parameter.empty:
+                            f.add_argument(arg_name, type=str_to_bool(), nargs='?',
+                                const=True, default=arg_val, help=arg_help[arg_name])
+                        else:
+                            # For bool without a default, use store_true action
+                            f.add_argument(arg_name, action='store_true',
+                                help=arg_help[arg_name])
+                    elif effective_type in list_types:
+                        _type = inner_types[list_types.index(effective_type)]
+                        f.add_argument(arg_name, type=str_to_list(_type),
                             default=arg_val, help=arg_help[arg_name])
-                    elif arg_type is Dict:
-                        f.add_argument(arg_name, type=str_to_dict(), 
+                    elif effective_type is Dict:
+                        f.add_argument(arg_name, type=str_to_dict(),
                             default=arg_val, help=arg_help[arg_name])
-                    elif hasattr(arg_type, '__origin__'):
-                        if arg_type.__origin__ is tuple:
-                            _type_list = arg_type.__args__
-                            f.add_argument(arg_name, type=str_to_tuple(_type_list), 
+                    elif hasattr(effective_type, '__origin__'):
+                        if effective_type.__origin__ is tuple:
+                            _type_list = effective_type.__args__
+                            f.add_argument(arg_name, type=str_to_tuple(_type_list),
                                 default=arg_val, help=arg_help[arg_name])
                     else:
-                        f.add_argument(arg_name, type=arg_type, 
+                        f.add_argument(arg_name, type=effective_type,
                             default=arg_val, help=arg_help[arg_name])
             
         desc = docstring.short_description

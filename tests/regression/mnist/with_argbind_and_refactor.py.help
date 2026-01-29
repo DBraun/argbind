@@ -2,7 +2,7 @@ usage: with_argbind_and_refactor.py [-h] [--args.save ARGS.SAVE]
                                     [--args.load ARGS.LOAD]
                                     [--args.debug ARGS.DEBUG]
                                     [--train.log_interval TRAIN.LOG_INTERVAL]
-                                    [--train.dry_run]
+                                    [--train.dry_run [TRAIN.DRY_RUN]]
                                     [--dataset.folder DATASET.FOLDER]
                                     [--dataset.split DATASET.SPLIT]
                                     [--dataset.batch_size DATASET.BATCH_SIZE]
@@ -10,8 +10,9 @@ usage: with_argbind_and_refactor.py [-h] [--args.save ARGS.SAVE]
                                     [--scheduler.step_size SCHEDULER.STEP_SIZE]
                                     [--scheduler.gamma SCHEDULER.GAMMA]
                                     [--main.epochs MAIN.EPOCHS]
-                                    [--main.no_cuda] [--main.seed MAIN.SEED]
-                                    [--main.save_model]
+                                    [--main.no_cuda [MAIN.NO_CUDA]]
+                                    [--main.seed MAIN.SEED]
+                                    [--main.save_model [MAIN.SAVE_MODEL]]
 
 options:
   -h, --help            show this help message and exit
@@ -28,7 +29,8 @@ Generated arguments for function train:
   --train.log_interval TRAIN.LOG_INTERVAL
                         how many batches to wait before logging training status, by
                         default 10
-  --train.dry_run       For Saving the current Model, by default False
+  --train.dry_run [TRAIN.DRY_RUN]
+                        For Saving the current Model, by default False
 
 Generated arguments for function dataset:
   Configuration for the dataset. Additional scope patterns:
@@ -62,7 +64,9 @@ Generated arguments for function main:
 
   --main.epochs MAIN.EPOCHS
                         number of epochs to train, by default 14
-  --main.no_cuda        disables CUDA training, by default False
+  --main.no_cuda [MAIN.NO_CUDA]
+                        disables CUDA training, by default False
   --main.seed MAIN.SEED
                         random seed, by default 1
-  --main.save_model     For Saving the current Model, by default False
+  --main.save_model [MAIN.SAVE_MODEL]
+                        For Saving the current Model, by default False

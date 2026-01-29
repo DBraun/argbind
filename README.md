@@ -57,15 +57,17 @@ python -m pip install -e .
 - [Example 1: Hello World](./examples/hello_world/)
 - [Example 2: Scope patterns](./examples/scoping/)
 - [Example 3: Typing](./examples/typing/)
-- [Example 4: MNIST Script](./examples/mnist/)
-- [Example 5: Loading, saving, and using .yml files](./examples/yaml)
-- [Example 6: Multi-stage programs](./examples/multistage)
-- [Example 7: Mimic more traditional CLI, without `func.arg` notation](./examples/without_prefix)
-- [Example 8: Debug mode](./examples/debug)
-- [Example 9: Migrating from ArgParse](./examples/migration)
-- [Example 10: Binding existing functions and classes](./examples/bind_existing)
-- [Example 11: Binding entire modules](./examples/bind_module)
-- [Example 12: Binding functions to specific groups](./examples/groups)
+- [Example 4: Flexible boolean syntax](./examples/booleans)
+- [Example 5: Using default_factory with dataclasses](./examples/default_factory)
+- [Example 6: MNIST Script](./examples/mnist/)
+- [Example 7: Loading, saving, and using .yml files](./examples/yaml)
+- [Example 8: Multi-stage programs](./examples/multistage)
+- [Example 9: Mimic more traditional CLI, without `func.arg` notation](./examples/without_prefix)
+- [Example 10: Debug mode](./examples/debug)
+- [Example 11: Migrating from ArgParse](./examples/migration)
+- [Example 12: Binding existing functions and classes](./examples/bind_existing)
+- [Example 13: Binding entire modules](./examples/bind_module)
+- [Example 14: Binding functions to specific groups](./examples/groups)
 
 ## Usage
 
@@ -255,11 +257,13 @@ and others out of a desire to keep ArgBind's code simple and straightforward.
 
 ## Boolean keyword arguments
 
-If a boolean is flipped to True in a `.yml` file, there's no
-way to override it from the command line. If you want a flag to
-be flippable, make the argument an int instead of a bool and use
-0 and 1 for True and False. Then you can override from command
-line like `--func.arg 0` or `--func.arg 1`.
+Boolean arguments with defaults support flexible syntax. You can use either:
+- **Flag-style**: `--func.arg` sets the value to `True`
+- **Value-style**: `--func.arg=0`, `--func.arg=1`, `--func.arg=true`, `--func.arg=false`
+
+This means you can easily flip booleans to any value from both the command line
+and `.yml` files. Both syntaxes work together, so you can use whichever is more
+convenient for your use case.
 
 ## Bound function names should be unique
 
