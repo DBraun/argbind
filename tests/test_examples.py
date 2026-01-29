@@ -484,3 +484,98 @@ test_types.my_str: 456''',
                     f"  Output:\n{output}\n"
                     f"  Stderr: {result.stderr.decode('utf-8')}"
                 )
+
+def test_yaml_bool_formats():
+    """Test that booleans in YAML files work with all supported formats.
+
+    This ensures that various YAML boolean representations (true, false, True,
+    False, 0, 1, '0', '1', etc.) are correctly parsed as boolean values.
+    """
+    import tempfile
+
+    # Create a test script
+    test_script = """
+import argbind
+from dataclasses import dataclass
+
+@argbind.bind()
+@dataclass
+class Example:
+    on: bool = True
+    off: bool = False
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        ex = Example()
+        print(f"on={ex.on},off={ex.off}")
+"""
+
+    test_cases = [
+        {
+            'name': 'lowercase_true_false',
+            'yaml': 'Example.on: false\nExample.off: true',
+            'expected': 'on=False,off=True'
+        },
+        {
+            'name': 'capitalized_True_False',
+            'yaml': 'Example.on: False\nExample.off: True',
+            'expected': 'on=False,off=True'
+        },
+        {
+            'name': 'integer_0_1',
+            'yaml': 'Example.on: 0\nExample.off: 1',
+            'expected': 'on=False,off=True'
+        },
+        {
+            'name': 'quoted_string_0_1',
+            'yaml': "Example.on: '0'\nExample.off: '1'",
+            'expected': 'on=False,off=True'
+        },
+        {
+            'name': 'quoted_string_true_false',
+            'yaml': "Example.on: 'false'\nExample.off: 'true'",
+            'expected': 'on=False,off=True'
+        },
+        {
+            'name': 'quoted_capitalized_True_False',
+            'yaml': "Example.on: 'False'\nExample.off: 'True'",
+            'expected': 'on=False,off=True'
+        },
+    ]
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        import os
+        script_path = os.path.join(tmpdir, 'test_bool.py')
+
+        # Write the test script
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        for test_case in test_cases:
+            print(f"Testing: {test_case['name']}")
+
+            # Write YAML file
+            yaml_path = os.path.join(tmpdir, 'test.yml')
+            with open(yaml_path, 'w') as f:
+                f.write(test_case['yaml'])
+
+            # Run the test
+            cmd = ["python", script_path, f"--args.load={yaml_path}"]
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=tmpdir
+            )
+
+            output = result.stdout.decode('utf-8').strip()
+            expected = test_case['expected']
+
+            assert output == expected, (
+                f"Test '{test_case['name']}' failed:\n"
+                f"  Command: {' '.join(cmd)}\n"
+                f"  Expected: {expected}\n"
+                f"  Got: {output}\n"
+                f"  Stderr: {result.stderr.decode('utf-8')}"
+            )

@@ -409,8 +409,12 @@ def _cast_value(value, target_type):
 
     # Try to cast to the target type
     try:
-        # For basic types (int, float, str, bool), use the type directly
-        if target_type in (int, float, str, bool):
+        # For bool, use str_to_bool converter to handle string inputs correctly
+        if target_type is bool:
+            converter = str_to_bool()
+            return converter(value)
+        # For other basic types (int, float, str), use the type directly
+        elif target_type in (int, float, str):
             return target_type(value)
         # For other types (including generics), return as-is and let Python handle it
         return value
