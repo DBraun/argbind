@@ -276,6 +276,30 @@ a path to the function etc.
 ArgBind uses [docstring-parser](https://github.com/rr-/docstring_parser), and so
 the only supported styles are: ReST, Google, and Numpydoc-style docstrings.
 
+## Literal types
+
+You can use `Literal` from `typing` to restrict an argument to a fixed set of values:
+
+```python
+from typing import Literal
+import argbind
+
+@argbind.bind()
+def train(mode: Literal['train', 'val', 'test'] = 'train'):
+    print(mode)
+```
+
+On the command line, invalid values are rejected with a clear error:
+
+```
+❯ python script.py --train.mode=invalid
+error: argument --train.mode: invalid choice: 'invalid' (choose from 'train', 'val', 'test')
+```
+
+`Literal` works with `str`, `int`, and `float` values. It also composes with `Optional`:
+`Optional[Literal['a', 'b']]` defaults to `None` and accepts `'a'` or `'b'`.
+Invalid values in `.yml` files are also caught at runtime.
+
 ## Not all types are supported
 
 ArgBind supports most types that might pop up in your script, but not all. The supported types can be seen in the [typing example](./examples/typing/).

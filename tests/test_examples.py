@@ -1,12 +1,15 @@
 import glob
-import pytest 
+import pytest
 import pathlib
 import subprocess
+import sys
 import os
 from subprocess import PIPE
 import tempfile
 import yaml
 import argbind
+
+PYTHON = sys.executable
 
 OVERWRITE = False
 
@@ -17,7 +20,7 @@ paths = glob.glob(str(examples_path) + '/*/*.py')
 
 os.makedirs(regression_path, exist_ok=True)
 
-def check(output, output_path):
+def check(output, output_path, prefix_only=False):
     if not os.path.exists(output_path) or OVERWRITE:
         output_path.parent.mkdir(exist_ok=True)
         with open(output_path, 'w') as f:
@@ -25,6 +28,8 @@ def check(output, output_path):
     else:
         with open(output_path, 'r') as f:
             reg_output = f.read()
+        if prefix_only:
+            output = output[:len(reg_output)]
         assert output == reg_output
 
 @pytest.mark.parametrize("path", paths)
@@ -34,7 +39,7 @@ def test_example(path):
 
     if "groups" in path:
         help_args.append("evaluate")
-    output = subprocess.run(["python", path] + help_args + ["-h"], 
+    output = subprocess.run([PYTHON, path] + help_args + ["-h"], 
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = output.stdout.decode('utf-8')
     
@@ -68,13 +73,14 @@ def test_example(path):
     
 
     print(f"python {path} " + " ".join(add_args))
-    output = subprocess.run(["python", path] + add_args, 
+    output = subprocess.run([PYTHON, path] + add_args, 
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = output.stdout.decode('utf-8')
 
     _path = path.split('examples/')[-1] + '.run'
     output_path = regression_path / _path
-    check(output, output_path)
+    # MNIST downloads data to stdout on first run; only compare the prefix
+    check(output, output_path, prefix_only='mnist' in path)
 
     # Test argbind with saving/loading args
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -84,17 +90,22 @@ def test_example(path):
             add_args = [f'--args.save={save_path}']
             if 'mnist' in path:
                 add_args.append("--main.epochs=0")
-            output = subprocess.run(["python", path] + add_args, 
+            output = subprocess.run([PYTHON, path] + add_args, 
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output1 = output.stdout.decode('utf-8')
 
             # Load args
             add_args[0] = f'--args.load={save_path}'
-            output = subprocess.run(["python", path] + add_args, 
+            output = subprocess.run([PYTHON, path] + add_args, 
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output2 = output.stdout.decode('utf-8')
 
-            assert output1 == output2        
+            if 'mnist' in path:
+                # MNIST may print download messages on first run but not second
+                min_len = min(len(output1), len(output2))
+                assert output1[:min_len] == output2[:min_len]
+            else:
+                assert output1 == output2
 
 def test_yaml_example():
     added_args = [
@@ -108,7 +119,7 @@ def test_yaml_example():
 
     path = str(examples_path / 'yaml' / 'main.py')
     for i, add_arg in enumerate(added_args):      
-        cmd = [f"python", path] + add_arg['flags'] 
+        cmd = [PYTHON, path] + add_arg['flags'] 
 
         environ = os.environ.copy()        
         environ.update(add_arg['env'])
@@ -132,7 +143,7 @@ def test_nested_yaml_example():
 
     path = str(examples_path / 'nested_yaml' / 'main.py')
     for i, add_arg in enumerate(added_args):      
-        cmd = [f"python", path] + add_arg['flags'] 
+        cmd = [PYTHON, path] + add_arg['flags'] 
         output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = output.stdout.decode('utf-8')
 
@@ -154,7 +165,7 @@ def test_typing_example():
     ]
     path = str(examples_path / 'typing' / 'with_argbind.py')
     for i, add_arg in enumerate(added_args):
-        output = subprocess.run(["python", path] + add_arg, 
+        output = subprocess.run([PYTHON, path] + add_arg, 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = output.stdout.decode('utf-8')
 
@@ -203,7 +214,7 @@ def test_list_none_default():
 
     for test_case in test_cases:
         print(f"Testing: {test_case['name']}")
-        cmd = ["python", path] + test_case['args']
+        cmd = [PYTHON, path] + test_case['args']
         result = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
@@ -237,8 +248,8 @@ def test_scoping_example():
         with tempfile.TemporaryDirectory() as tmpdir:
             save_path = str(pathlib.Path(tmpdir) / 'args.yml')
             add_args = [f'--args.save={save_path}'] + add_arg
-            print(' '.join(["python", path] + add_args))
-            output = subprocess.run(["python", path] + add_args, 
+            print(' '.join([PYTHON, path] + add_args))
+            output = subprocess.run([PYTHON, path] + add_args, 
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
             data = argbind.load_args(save_path)
@@ -248,7 +259,7 @@ def test_scoping_example():
             add_arg = [x for x in add_arg if '/' not in x]
             add_args = [f'--args.load={save_path}'] + add_arg
             
-            output = subprocess.run(["python", path] + add_args, 
+            output = subprocess.run([PYTHON, path] + add_args, 
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output = output.stdout.decode('utf-8')
 
@@ -325,7 +336,7 @@ def test_bool_flexibility():
 
     for test_case in test_cases:
         print(f"Testing: {test_case['name']}")
-        cmd = ["python", path] + test_case['args']
+        cmd = [PYTHON, path] + test_case['args']
         result = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
@@ -367,7 +378,7 @@ def test_default_factory_list():
 
     for test_case in test_cases:
         print(f"Testing: {test_case['name']}")
-        cmd = ["python", path] + test_case['args']
+        cmd = [PYTHON, path] + test_case['args']
         result = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
@@ -465,7 +476,7 @@ test_types.my_str: 456''',
                 f.write(test_case['yaml'])
 
             # Run the test
-            cmd = ["python", script_path, f"--args.load={yaml_path}"]
+            cmd = [PYTHON, script_path, f"--args.load={yaml_path}"]
             result = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -561,7 +572,7 @@ if __name__ == "__main__":
                 f.write(test_case['yaml'])
 
             # Run the test
-            cmd = ["python", script_path, f"--args.load={yaml_path}"]
+            cmd = [PYTHON, script_path, f"--args.load={yaml_path}"]
             result = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -579,3 +590,248 @@ if __name__ == "__main__":
                 f"  Got: {output}\n"
                 f"  Stderr: {result.stderr.decode('utf-8')}"
             )
+
+def test_literal_types():
+    """Test that Literal type annotations restrict values and work with save/load."""
+    test_script = """
+from typing import Literal, Optional
+import argbind
+
+@argbind.bind()
+def func(
+    mode: Literal['train', 'val', 'test'] = 'train',
+    level: Literal[1, 2, 3] = 1,
+    opt: Optional[Literal['a', 'b']] = None,
+):
+    print(f"mode={mode!r},level={level!r},opt={opt!r}")
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+
+    test_cases = [
+        {
+            'name': 'defaults',
+            'args': [],
+            'expected': "mode='train',level=1,opt=None",
+        },
+        {
+            'name': 'cli_str_literal',
+            'args': ['--func.mode=val'],
+            'expected': "mode='val',level=1,opt=None",
+        },
+        {
+            'name': 'cli_int_literal',
+            'args': ['--func.level=3'],
+            'expected': "mode='train',level=3,opt=None",
+        },
+        {
+            'name': 'cli_optional_literal',
+            'args': ['--func.opt=b'],
+            'expected': "mode='train',level=1,opt='b'",
+        },
+        {
+            'name': 'cli_all',
+            'args': ['--func.mode=test', '--func.level=2', '--func.opt=a'],
+            'expected': "mode='test',level=2,opt='a'",
+        },
+    ]
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = os.path.join(tmpdir, 'test_literal.py')
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        for test_case in test_cases:
+            print(f"Testing: {test_case['name']}")
+            cmd = [PYTHON, script_path] + test_case['args']
+            result = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+            )
+            output = result.stdout.decode('utf-8').strip()
+            expected = test_case['expected']
+            assert output == expected, (
+                f"Test '{test_case['name']}' failed:\n"
+                f"  Command: {' '.join(cmd)}\n"
+                f"  Expected: {expected}\n"
+                f"  Got: {output}\n"
+                f"  Stderr: {result.stderr.decode('utf-8')}"
+            )
+
+def test_literal_cli_invalid():
+    """Test that invalid Literal values are rejected from CLI."""
+    test_script = """
+from typing import Literal
+import argbind
+
+@argbind.bind()
+def func(mode: Literal['train', 'val', 'test'] = 'train'):
+    print(mode)
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = os.path.join(tmpdir, 'test_literal.py')
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        result = subprocess.run(
+            [PYTHON, script_path, '--func.mode=bogus'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+        )
+        assert result.returncode != 0, "Should reject invalid Literal value"
+        assert "invalid choice" in result.stderr.decode('utf-8')
+
+def test_literal_yaml_invalid():
+    """Test that invalid Literal values from YAML are rejected."""
+    test_script = """
+from typing import Literal
+import argbind
+
+@argbind.bind()
+def func(mode: Literal['train', 'val', 'test'] = 'train'):
+    print(mode)
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = os.path.join(tmpdir, 'test_literal.py')
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        yaml_path = os.path.join(tmpdir, 'test.yml')
+        with open(yaml_path, 'w') as f:
+            f.write('func.mode: bogus\n')
+
+        result = subprocess.run(
+            [PYTHON, script_path, f'--args.load={yaml_path}'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+        )
+        assert result.returncode != 0, "Should reject invalid Literal value from YAML"
+        stderr = result.stderr.decode('utf-8')
+        assert "must be one of" in stderr, f"Expected validation error, got: {stderr}"
+
+def test_literal_yaml_valid():
+    """Test that valid Literal values from YAML work correctly."""
+    test_script = """
+from typing import Literal
+import argbind
+
+@argbind.bind()
+def func(
+    mode: Literal['train', 'val', 'test'] = 'train',
+    level: Literal[1, 2, 3] = 1,
+):
+    print(f"mode={mode!r},level={level!r}")
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = os.path.join(tmpdir, 'test_literal.py')
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        yaml_path = os.path.join(tmpdir, 'test.yml')
+        with open(yaml_path, 'w') as f:
+            f.write('func.mode: test\nfunc.level: 3\n')
+
+        result = subprocess.run(
+            [PYTHON, script_path, f'--args.load={yaml_path}'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+        )
+        output = result.stdout.decode('utf-8').strip()
+        assert output == "mode='test',level=3", (
+            f"Expected mode='test',level=3, got: {output}\n"
+            f"Stderr: {result.stderr.decode('utf-8')}"
+        )
+
+def test_literal_save_load_roundtrip():
+    """Test that Literal values survive save/load roundtrip."""
+    test_script = """
+from typing import Literal
+import argbind
+
+@argbind.bind()
+def func(mode: Literal['train', 'val', 'test'] = 'train'):
+    print(f"mode={mode!r}")
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = os.path.join(tmpdir, 'test_literal.py')
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        save_path = os.path.join(tmpdir, 'saved.yml')
+
+        # Save
+        result1 = subprocess.run(
+            [PYTHON, script_path, '--func.mode=test', f'--args.save={save_path}'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+        )
+        output1 = result1.stdout.decode('utf-8').strip()
+
+        # Load
+        result2 = subprocess.run(
+            [PYTHON, script_path, f'--args.load={save_path}'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+        )
+        output2 = result2.stdout.decode('utf-8').strip()
+
+        assert output1 == "mode='test'", f"Save run failed: {output1}"
+        assert output1 == output2, (
+            f"Roundtrip mismatch:\n  Save: {output1}\n  Load: {output2}"
+        )
+
+def test_literal_scoped():
+    """Test that Literal works with scoped functions."""
+    test_script = """
+from typing import Literal
+import argbind
+
+@argbind.bind('train', 'val')
+def create_dataset(mode: Literal['train', 'val', 'test'] = 'train'):
+    print(f"mode={mode!r}")
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args, 'train'):
+        create_dataset()
+    with argbind.scope(args, 'val'):
+        create_dataset()
+"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = os.path.join(tmpdir, 'test_literal.py')
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+
+        result = subprocess.run(
+            [PYTHON, script_path,
+             '--train/create_dataset.mode=train',
+             '--val/create_dataset.mode=val'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tmpdir
+        )
+        output = result.stdout.decode('utf-8').strip()
+        assert output == "mode='train'\nmode='val'", (
+            f"Expected scoped output, got: {output}\n"
+            f"Stderr: {result.stderr.decode('utf-8')}"
+        )

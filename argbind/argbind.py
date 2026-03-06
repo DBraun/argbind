@@ -1,7 +1,7 @@
 import inspect
 from contextlib import contextmanager
 import argparse
-from typing import List, Dict, Union, get_origin, get_args
+from typing import List, Dict, Literal, Union, get_origin, get_args
 import docstring_parser
 import textwrap
 import yaml
@@ -372,6 +372,20 @@ def _unwrap_optional(arg_type):
             return args[0] if args[1] is type(None) else args[1]
     return None
 
+def _unwrap_literal(arg_type):
+    """Unwrap Literal[v1, v2, ...] to its allowed values, return None if not Literal.
+
+    Args:
+        arg_type: Type annotation to check
+
+    Returns:
+        Tuple of allowed values if arg_type is Literal[...], otherwise None
+    """
+    if get_origin(arg_type) is Literal:
+        return get_args(arg_type)
+    return None
+
+
 def _cast_value(value, target_type):
     """Cast a value to the target type if needed.
 
@@ -396,6 +410,20 @@ def _cast_value(value, target_type):
 
     # Handle None values
     if value is None:
+        return value
+
+    # Handle Literal[v1, v2, ...] — cast to the type of the first allowed value
+    literal_values = _unwrap_literal(target_type)
+    if literal_values is not None:
+        val_type = type(literal_values[0])
+        try:
+            value = val_type(value)
+        except (ValueError, TypeError):
+            pass
+        if value not in literal_values:
+            raise ValueError(
+                f"invalid value {value!r} - must be one of {list(literal_values)}"
+            )
         return value
 
     # Check if value is already the right type (only for non-generic types)
@@ -530,6 +558,12 @@ def build_parser(group: Union[list, str] = "default"):
                             default=arg_val, help=arg_help[arg_name])
                     elif effective_type is Dict:
                         f.add_argument(arg_name, type=str_to_dict(),
+                            default=arg_val, help=arg_help[arg_name])
+                    elif _unwrap_literal(effective_type) is not None:
+                        literal_values = _unwrap_literal(effective_type)
+                        val_type = type(literal_values[0])
+                        f.add_argument(arg_name, type=val_type,
+                            choices=literal_values,
                             default=arg_val, help=arg_help[arg_name])
                     elif hasattr(effective_type, '__origin__'):
                         if effective_type.__origin__ is tuple:
