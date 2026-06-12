@@ -1,7 +1,8 @@
 import inspect
+import types
 from contextlib import contextmanager
 import argparse
-from typing import List, Dict, Literal, Union, get_origin, get_args
+from typing import Literal, Union, get_origin, get_args
 import docstring_parser
 import textwrap
 import yaml
@@ -308,6 +309,9 @@ class str_to_tuple():
         self._type_list = _type_list
     def __call__(self, values):
         _values = values.split(' ')
+        if len(self._type_list) == 2 and self._type_list[1] is Ellipsis:
+            # Variable-length tuple[X, ...]: every element has the same type
+            return tuple(self._type_list[0](v) for v in _values)
         _values = [self._type_list[i](v) for i, v in enumerate(_values)]
         return tuple(_values)
 
@@ -354,17 +358,21 @@ class str_to_bool():
             return False
         raise ValueError(f"Cannot convert {value} to bool")
 
+# PEP 604 unions (X | None) have origin types.UnionType rather than
+# typing.Union on Python 3.10-3.13 (the two are unified in 3.14).
+_UNION_ORIGINS = tuple({Union, getattr(types, "UnionType", Union)})
+
 def _unwrap_optional(arg_type):
-    """Unwrap Optional[X] to X, return None if not Optional.
+    """Unwrap Optional[X] or X | None to X, return None if not Optional.
 
     Args:
         arg_type: Type annotation to check
 
     Returns:
-        The inner type if arg_type is Optional[X], otherwise None
+        The inner type if arg_type is Optional[X] / X | None, otherwise None
     """
     origin = get_origin(arg_type)
-    if origin is Union:
+    if origin in _UNION_ORIGINS:
         args = get_args(arg_type)
         # Check if this is Optional[X] (i.e., Union[X, None])
         if len(args) == 2 and type(None) in args:
@@ -532,12 +540,14 @@ def build_parser(group: Union[list, str] = "default"):
 
                 for arg_name in arg_names:
                     inner_types = [str, int, float, bool]
-                    list_types = [List[x] for x in inner_types]
 
-                    # Check if the type is Optional[X] and unwrap it
+                    # Unwrap Optional[X] / X | None to X
                     unwrapped_type = _unwrap_optional(arg_type)
                     is_optional = unwrapped_type is not None
                     effective_type = unwrapped_type if is_optional else arg_type
+                    # Origin of generic aliases: list for list[X]/List[X],
+                    # dict for dict[K, V]/Dict[K, V], etc. None for plain types.
+                    origin = get_origin(effective_type)
 
                     if effective_type is bool:
                         # For bool with a default, support both flag and value syntax:
@@ -552,11 +562,19 @@ def build_parser(group: Union[list, str] = "default"):
                             # For bool without a default, use store_true action
                             f.add_argument(arg_name, action='store_true',
                                 help=arg_help[arg_name])
-                    elif effective_type in list_types:
-                        _type = inner_types[list_types.index(effective_type)]
-                        f.add_argument(arg_name, type=str_to_list(_type),
-                            default=arg_val, help=arg_help[arg_name])
-                    elif effective_type is Dict:
+                    elif effective_type is list or origin is list:
+                        # Covers list, List, list[X], and List[X]. Bare
+                        # list defaults to str elements.
+                        type_args = get_args(effective_type)
+                        _type = type_args[0] if type_args else str
+                        if _type in inner_types:
+                            f.add_argument(arg_name, type=str_to_list(_type),
+                                default=arg_val, help=arg_help[arg_name])
+                        # Lists of other element types cannot be parsed from
+                        # the command line; they stay configurable via YAML.
+                    elif effective_type is dict or origin is dict:
+                        # Covers dict, Dict, dict[K, V], and Dict[K, V].
+                        # Value types are guessed with ast.literal_eval.
                         f.add_argument(arg_name, type=str_to_dict(),
                             default=arg_val, help=arg_help[arg_name])
                     elif _unwrap_literal(effective_type) is not None:
@@ -565,11 +583,25 @@ def build_parser(group: Union[list, str] = "default"):
                         f.add_argument(arg_name, type=val_type,
                             choices=literal_values,
                             default=arg_val, help=arg_help[arg_name])
-                    elif hasattr(effective_type, '__origin__'):
-                        if effective_type.__origin__ is tuple:
-                            _type_list = effective_type.__args__
-                            f.add_argument(arg_name, type=str_to_tuple(_type_list),
+                    elif origin is tuple:
+                        _type_list = get_args(effective_type)
+                        f.add_argument(arg_name, type=str_to_tuple(_type_list),
+                            default=arg_val, help=arg_help[arg_name])
+                    elif origin in _UNION_ORIGINS:
+                        # Union of several real types, e.g.
+                        # str | os.PathLike | None. A command-line value is
+                        # already a str, so if str is a member, pass it
+                        # through unchanged. Unions without str cannot be
+                        # parsed from the command line and stay configurable
+                        # via YAML.
+                        if str in get_args(effective_type):
+                            f.add_argument(arg_name, type=str,
                                 default=arg_val, help=arg_help[arg_name])
+                    elif origin is not None:
+                        # Other generics (Mapping[K, V], custom generics,
+                        # ...) cannot be parsed from the command line; they
+                        # stay configurable via YAML.
+                        pass
                     else:
                         f.add_argument(arg_name, type=effective_type,
                             default=arg_val, help=arg_help[arg_name])

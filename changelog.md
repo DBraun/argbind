@@ -1,4 +1,26 @@
 # Changelog
+## v0.5.0
+- **Modern type annotation support** (PEP 585 / PEP 604), matching what
+  `pyupgrade --py310-plus` rewrites `typing` aliases into:
+  - `X | None` is now unwrapped like `Optional[X]` everywhere (CLI parsing and
+    YAML type casting). Previously it reached argparse as a `type=` callable and
+    crashed `build_parser()` with `ValueError: ... is not callable`.
+  - `list[X]` and `List[X]` are now both dispatched via `typing.get_origin`, so
+    builtin generics get the same space-separated CLI parsing. Previously
+    `list[X]` silently generated no CLI flag at all.
+  - `dict`, `dict[K, V]`, and `Dict[K, V]` all get `key=value` CLI parsing.
+    Previously only bare `typing.Dict` did; the others were silently CLI-less
+    (subscripted `Dict[K, V]`) or broken (`type=dict`).
+  - `tuple[X, ...]` (and `Tuple[X, ...]`) variadic tuples now parse each
+    element with `X` instead of raising `IndexError` past the first element.
+  - Unions of several real types that include `str` (e.g.
+    `str | os.PathLike | None`) accept the raw command-line string, since a
+    CLI value is already a valid `str` member. Unions without `str` generate
+    no CLI flag and stay configurable via YAML, matching the old
+    `Union[X, Y]` behavior, instead of crashing the parser.
+- Added `tests/test_modern_annotations.py` covering all of the above plus a
+  regression guard that the legacy `typing` spellings behave unchanged.
+
 ## v0.4.0
 - **Major enhancement**: Boolean arguments with defaults now support flexible syntax!
   - Use flag-style: `--func.arg` sets to `True`

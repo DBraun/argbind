@@ -1,6 +1,8 @@
 usage: with_argbind_abstract_classes.py [-h] [--args.save ARGS.SAVE]
                                         [--args.load ARGS.LOAD]
                                         [--args.debug ARGS.DEBUG]
+                                        [--Sub1.config SUB1.CONFIG]
+                                        [--Sub2.config SUB2.CONFIG]
 
 options:
   -h, --help            show this help message and exit
@@ -13,4 +15,8 @@ options:
 
 Generated arguments for function Sub1:
 
+  --Sub1.config SUB1.CONFIG
+
 Generated arguments for function Sub2:
+
+  --Sub2.config SUB2.CONFIG
