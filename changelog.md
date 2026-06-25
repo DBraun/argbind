@@ -1,4 +1,13 @@
 # Changelog
+## v0.5.1
+- **`$include` is resolved relative to the including file**, not the process CWD. A config and its
+  `$include` tree now load identically regardless of where they are invoked from — including from a
+  read-only `site-packages` install. Includes are written relative to the file that lists them
+  (e.g. a file in `conf/` uses `$include: [base.yml, mixins/x.yml]`; one in `conf/ablations/` uses
+  `$include: [../base.yml]`). For backward compatibility, if the file-relative path does not exist,
+  it falls back to the previous CWD-relative resolution, so configs that still write includes
+  relative to the run directory keep working.
+
 ## v0.5.0
 - **Modern type annotation support** (PEP 585 / PEP 604), matching what
   `pyupgrade --py310-plus` rewrites `typing` aliases into:

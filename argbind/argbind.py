@@ -254,15 +254,27 @@ def load_args(input_path_or_stream):
     the file is already open.
     """
     if isinstance(input_path_or_stream, (str, Path)):
+        # Resolve $include relative to THIS file's directory (not the process CWD), so a
+        # config and its include tree load identically regardless of where it's invoked
+        # from — including when installed read-only in site-packages.
+        base_dir = os.path.dirname(os.path.abspath(os.fspath(input_path_or_stream)))
         with open(input_path_or_stream, 'r') as f:
             data = yaml.load(f, Loader=yaml.Loader)
     else:
+        base_dir = None
         data = yaml.load(input_path_or_stream, Loader=yaml.Loader)
-    
+
     if '$include' in data:
         include_files = data.pop('$include')
         include_args = {}
         for include_file in include_files:
+            # Prefer file-relative resolution (CWD-independent). Fall back to the legacy
+            # CWD-relative path if the file-relative one doesn't exist, so configs that
+            # still write includes relative to the run directory keep working.
+            if base_dir is not None and not os.path.isabs(include_file):
+                file_relative = os.path.join(base_dir, include_file)
+                if os.path.exists(file_relative):
+                    include_file = file_relative
             include_args.update(load_args(include_file))
         include_args.update(data)
         data = include_args
