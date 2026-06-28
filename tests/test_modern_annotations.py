@@ -420,3 +420,108 @@ if __name__ == "__main__":
             "expected": "ints=[1, 2],d={'k': 'v'},s='hello',t=(3, 'x')",
         },
     ])
+
+
+def test_pep563_future_annotations():
+    """`from __future__ import annotations` (PEP 563) stringizes annotations.
+
+    build_parser must still derive CLI converters from them instead of crashing
+    with "'bool' is not callable". This mirrors binding a class whose module uses
+    future annotations (e.g. audiotree's SaliencyParams).
+    """
+    source = """
+from __future__ import annotations
+import argbind
+
+@argbind.bind()
+def func(
+    enabled: bool = True,
+    num_tries: int = 8,
+    loudness_cutoff: float = -40.0,
+    name: str = "uniform",
+):
+    print(
+        f"enabled={enabled!r},num_tries={num_tries!r},"
+        f"loudness_cutoff={loudness_cutoff!r},name={name!r}"
+    )
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+    check_cases(source, [
+        {
+            "name": "defaults",
+            "args": [],
+            "expected": "enabled=True,num_tries=8,loudness_cutoff=-40.0,name='uniform'",
+        },
+        {
+            "name": "cli_overrides_are_typed",
+            "args": ["--func.enabled=0", "--func.num_tries=3",
+                     "--func.loudness_cutoff=-12.5", "--func.name=bias"],
+            "expected": "enabled=False,num_tries=3,loudness_cutoff=-12.5,name='bias'",
+        },
+    ])
+
+
+@requires_pep604
+def test_pep563_containers_and_class():
+    """Under PEP 563, eval_str resolves list[X] / X | None and class __init__ hints."""
+    source = """
+from __future__ import annotations
+import argbind
+
+@argbind.bind()
+class Model:
+    def __init__(self, tags: list[str] = None, dim: int | None = None):
+        print(f"tags={tags!r},dim={dim!r}")
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        Model()
+"""
+    check_cases(source, [
+        {"name": "defaults", "args": [], "expected": "tags=None,dim=None"},
+        {
+            "name": "cli_overrides",
+            "args": ["--Model.tags", "a b c", "--Model.dim=8"],
+            "expected": "tags=['a', 'b', 'c'],dim=8",
+        },
+    ])
+
+
+def test_pep563_unresolvable_annotation_is_yaml_only():
+    """A PEP 563 annotation that can't be evaluated at runtime (e.g. a
+    TYPE_CHECKING-only name) must not crash build_parser: the parameter is left
+    YAML-only while the resolvable ones still get CLI flags.
+    """
+    source = """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+import argbind
+
+if TYPE_CHECKING:
+    from pathlib import Path  # deliberately not imported at runtime
+
+@argbind.bind()
+def func(p: Path = None, q: int = 1):
+    print(f"p={p!r},q={q!r}")
+
+if __name__ == "__main__":
+    args = argbind.parse_args()
+    with argbind.scope(args):
+        func()
+"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # The key guarantee: parser construction must not raise.
+        result = run_script(source, [], tmpdir)
+        assert result.returncode == 0, result.stderr.decode("utf-8")
+        assert result.stdout.decode("utf-8").strip() == "p=None,q=1"
+
+        # The resolvable param gets a CLI flag; the unresolvable one does not.
+        result = run_script(source, ["-h"], tmpdir)
+        help_text = result.stdout.decode("utf-8")
+        assert "--func.q" in help_text
+        assert "--func.p" not in help_text

@@ -499,7 +499,16 @@ def build_parser(group: Union[list, str] = "default"):
         if not set(fn_group) & set(group):
             continue
 
-        sig = inspect.signature(func)
+        # Resolve string annotations produced by ``from __future__ import
+        # annotations`` (PEP 563). ``eval_str=True`` (Python 3.10+) evaluates them
+        # in the function's own namespace; if that's unsupported (3.9) or a name
+        # can't be resolved at runtime (e.g. a ``TYPE_CHECKING``-only import), fall
+        # back to the raw, possibly stringized annotations and handle the leftover
+        # strings per-parameter below.
+        try:
+            sig = inspect.signature(func, eval_str=True)
+        except Exception:
+            sig = inspect.signature(func)
 
         docstring = docstring_parser.parse(func.__doc__)
         parameter_help = docstring.params
@@ -538,6 +547,10 @@ def build_parser(group: Union[list, str] = "default"):
 
             if arg_type is inspect.Parameter.empty and is_kwarg:
                 arg_type = type(arg_val)
+            elif isinstance(arg_type, str) and is_kwarg and arg_val is not None:
+                # An unresolved PEP 563 annotation (the eval_str fallback above
+                # kept it as a string): infer the type from the default value.
+                arg_type = type(arg_val)
 
             if is_kwarg or positional:
                 arg_names = _get_arg_names(key, is_kwarg)
@@ -560,6 +573,13 @@ def build_parser(group: Union[list, str] = "default"):
                     # Origin of generic aliases: list for list[X]/List[X],
                     # dict for dict[K, V]/Dict[K, V], etc. None for plain types.
                     origin = get_origin(effective_type)
+
+                    if isinstance(effective_type, str):
+                        # An unresolved PEP 563 annotation with no informative
+                        # default to infer from: no CLI converter can be built, so
+                        # leave it YAML-configurable only rather than crashing
+                        # build_parser (matches the unsupported-union behavior).
+                        continue
 
                     if effective_type is bool:
                         # For bool with a default, support both flag and value syntax:
