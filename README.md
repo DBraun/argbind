@@ -26,18 +26,18 @@ current known [limitations](#limitations-and-known-issues) of ArgBind.
 
 ## Why ArgBind?
 
-I built ArgBind mostly to help me configure my machine learning experiments. ML experiment
-configuration is often highly nested, and can get out of hand quick. I didn't want to switch
-my workflow around too much to accommodate a new framework. Instead, I wanted the scripts
-that I've written to be easily adapted so that I could achieve a few goals:
+ArgBind was written by [Prem Seetharaman](https://github.com/pseeth) to help configure machine
+learning experiments. ML experiment configuration is often highly nested, and can get out of hand
+quick. Rather than switching workflows around too much to accommodate a new framework, the goal
+was to make already-written scripts easily adaptable, to achieve a few things:
 
 1. Configure scripts using `.yml` files. Be able to save `.yml` files that can be used to rerun scripts the exact same way twice.
 2. Spend time writing actual functions needed to run experiments, not argument parsers.
-3. Be able to run my experiment code from other Python scripts, notebooks, or the command line.
+3. Be able to run experiment code from other Python scripts, notebooks, or the command line.
 4. Be able to specify arguments from the command line directly to various functions.
-5. Be able to use scoping patterns, so I can run a function inside of a `train` scope and `test` scope, with different results (e.g. for getting a train dataset and a test dataset).
+5. Be able to use scoping patterns, so a function can run inside a `train` scope and `test` scope, with different results (e.g., for getting a train dataset and a test dataset).
 
-Nothing out there really fit the bill, so I wrote ArgBind. If you have
+Nothing out there really fit the bill, so Prem wrote ArgBind. If you have
 an `argparse` based script, converting it to ArgBind should be very quick! ArgBind is simple,
 small, and easy to use. To get a feel for how it works, check out [usage](#usage), [design](#design), and [examples](#examples)!
 
@@ -110,7 +110,7 @@ Your code with ArgBind generally follows this pattern:
 5. Optionally call program with `--args.save` to save the current execution configuration to a `.yml` file or `--args.load` to load arguments from a prior saved execution configuration to run it the same way twice.
 6. Optionally, run your script with `--args.debug=1` to see exactly how every bound function is called.
 
-In your program, you can call `get_used_args` to inspect the state of the argument dictionary. Here's a minimal example:
+In your program, you can call `get_used_args` to see which arguments were actually used. Here's a minimal example:
 
 ```python
 import argbind
@@ -136,6 +136,9 @@ if __name__ == "__main__":
     # from defaults.
     with argbind.scope(args):
         hello()
+    # get_used_args() returns the arguments that were actually used by the bound
+    # functions that ran -- here, {'hello.name': 'world'}.
+    print(argbind.get_used_args())
 ```
 
 Help text is automatically generated from the docstring:
@@ -273,18 +276,8 @@ You can also use `bind` directly on classes - see [here](./examples/bind_existin
 
 # Limitations and known issues
 
-There are some limitations to ArgBind, some due to how Python function decorator works,
+There are some limitations to ArgBind, some due to how Python function decorators work,
 and others out of a desire to keep ArgBind's code simple and straightforward.
-
-## Boolean keyword arguments
-
-Boolean arguments with defaults support flexible syntax. You can use either:
-- **Flag-style**: `--func.arg` sets the value to `True`
-- **Value-style**: `--func.arg=0`, `--func.arg=1`, `--func.arg=true`, `--func.arg=false`
-
-This means you can easily flip booleans to any value from both the command line
-and `.yml` files. Both syntaxes work together, so you can use whichever is more
-convenient for your use case.
 
 ## Bound function names should be unique
 
@@ -297,64 +290,20 @@ a path to the function etc.
 ArgBind uses [docstring-parser](https://github.com/rr-/docstring_parser), and so
 the only supported styles are: ReST, Google, and Numpydoc-style docstrings.
 
-## Literal types
-
-You can use `Literal` from `typing` to restrict an argument to a fixed set of values:
-
-```python
-from typing import Literal
-import argbind
-
-@argbind.bind()
-def train(mode: Literal['train', 'val', 'test'] = 'train'):
-    print(mode)
-```
-
-On the command line, invalid values are rejected with a clear error:
-
-```
-❯ python script.py --train.mode=invalid
-error: argument --train.mode: invalid choice: 'invalid' (choose from 'train', 'val', 'test')
-```
-
-`Literal` works with `str`, `int`, and `float` values. It also composes with `Optional`:
-`Optional[Literal['a', 'b']]` defaults to `None` and accepts `'a'` or `'b'`.
-Invalid values in `.yml` files are also caught at runtime.
-
 ## Not all types are supported
 
-ArgBind supports most types that might pop up in your script, but not all. The supported types can be seen in the [typing example](./examples/typing/).
+ArgBind supports most types that might pop up in your script, but not all. The
+supported types can be seen in the [typing](./examples/typing/) and
+[modern annotations](./examples/modern_typing/) examples.
 
 ## Positional arguments should not be saved into .yml files
 
-If the a positional argument is saved into a .yml file, and loaded
-via `--args.load`, then any positional argument passed in the
-command line will be overridden. Take care not to pass in
-positional arguments via `.yml` files.
-
-# Releasing
-
-Releases are published to PyPI automatically by the `Publish` workflow
-(`.github/workflows/publish.yml`) using [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/)
-(OIDC) — no API token is stored anywhere. To cut a release:
-
-1. Bump `version` in `pyproject.toml` and update `CHANGELOG.md`.
-2. Create a GitHub Release (e.g. tag `v0.5.2`). The workflow runs `uv build` and
-   publishes the sdist and wheel via OIDC.
-
-One-time setup on PyPI: register a trusted publisher for this project with
-owner `DBraun`, repository `argbind`, workflow `publish.yml`, and environment `pypi`.
-For the *first* release (before the project exists on PyPI) use the
-[pending publisher](https://pypi.org/manage/account/publishing/) form.
-
-To build the distributions locally without publishing:
-
-```
-uv build
-```
+If a positional argument is saved into a .yml file and loaded via `--args.load`,
+then any positional argument passed in the command line will be overridden. Take
+care not to pass positional arguments via `.yml` files.
 
 # Issues? Questions?
 
 If you've run into some issues with ArgBind, or have some questions, please ask
-via Github Issues. Projects like ArgBind are pretty tricky to get right, so there
+via GitHub Issues. Projects like ArgBind are pretty tricky to get right, so there
 may be some edge cases that have been missed.
