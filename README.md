@@ -28,7 +28,7 @@ current known [limitations](#limitations-and-known-issues) of ArgBind.
 
 ArgBind was written by [Prem Seetharaman](https://github.com/pseeth) to help configure machine
 learning experiments. ML experiment configuration is often highly nested, and can get out of hand
-quick. Rather than switching workflows around too much to accommodate a new framework, the goal
+quickly. Rather than switching workflows around too much to accommodate a new framework, the goal
 was to make already-written scripts easily adaptable, to achieve a few things:
 
 1. Configure scripts using `.yml` files. Be able to save `.yml` files that can be used to rerun scripts the exact same way twice.
