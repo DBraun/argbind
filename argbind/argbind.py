@@ -476,14 +476,11 @@ def _cast_value(value, target_type):
             )
         return value
 
-    # Check if value is already the right type (only for non-generic types)
-    # Avoid isinstance() with generic types like List[int] which raises TypeError
-    try:
-        if isinstance(value, target_type):
-            return value
-    except TypeError:
-        # Generic types like List[int], Dict[str, int] can't be used with isinstance
-        pass
+    # Fast path: return the value as-is if it is already the right type. Skip
+    # generic aliases like List[int], which are not valid second arguments to
+    # isinstance() (``isinstance(target_type, type)`` is False for them).
+    if isinstance(target_type, type) and isinstance(value, target_type):
+        return value
 
     # Try to cast to the target type
     try:
@@ -593,7 +590,10 @@ def build_parser(group: Union[list, str] = "default"):
                 arg_help = {}
                 help_text = ""
                 if key in parameter_help:
-                    help_text = textwrap.fill(parameter_help[key], width=HELP_WIDTH)
+                    # A documented parameter may have no description text (None).
+                    help_text = textwrap.fill(
+                        parameter_help[key] or "", width=HELP_WIDTH
+                    )
                 arg_help[arg_names[0]] = help_text
                 if len(arg_names) > 1:
                     for pattern_arg_name in arg_names[1:]:
@@ -697,12 +697,23 @@ def build_parser(group: Union[list, str] = "default"):
                         # ...) cannot be parsed from the command line; they
                         # stay configurable via YAML.
                         pass
-                    else:
+                    elif callable(effective_type):
+                        # A plain, callable type (int, float, str, or a custom
+                        # converter): argparse calls it on the raw string value.
                         f.add_argument(
                             arg_name,
                             type=effective_type,
                             default=arg_val,
                             help=arg_help[arg_name],
+                        )
+                    else:
+                        # Not a recognized generic and not callable: the
+                        # annotation is not a usable type (e.g. `x: None` or a
+                        # non-type value), so no argument can be built for it.
+                        raise RuntimeError(
+                            f"argbind cannot bind {prefix}.{key}: its annotation "
+                            f"{effective_type!r} is not a callable type or a "
+                            f"supported generic."
                         )
 
         desc = docstring.short_description
@@ -710,10 +721,14 @@ def build_parser(group: Union[list, str] = "default"):
             desc = ""
 
         if patterns:
+            # Use the last parameter as the example; fall back to a placeholder
+            # for a parameter-less function (sig.parameters is empty).
+            param_keys = list(sig.parameters)
+            example_key = param_keys[-1] if param_keys else "arg"
             if not without_prefix:
-                scope_pattern = f"--{patterns[0]}/{prefix}.{key}"
+                scope_pattern = f"--{patterns[0]}/{prefix}.{example_key}"
             else:
-                scope_pattern = f"--{patterns[0]}/{key}"
+                scope_pattern = f"--{patterns[0]}/{example_key}"
 
             desc += (
                 f" Additional scope patterns: {', '.join(list(patterns))}. "
