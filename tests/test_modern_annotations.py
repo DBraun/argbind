@@ -36,7 +36,8 @@ def check_cases(source, test_cases):
     with tempfile.TemporaryDirectory() as tmpdir:
         for case in test_cases:
             result = run_script(source, case["args"], tmpdir)
-            output = result.stdout.decode("utf-8").strip()
+            # Normalize CRLF so multi-line comparisons are robust on Windows.
+            output = result.stdout.decode("utf-8").replace("\r\n", "\n").strip()
             assert output == case["expected"], (
                 f"Case '{case['name']}' failed:\n"
                 f"  Args: {case['args']}\n"
