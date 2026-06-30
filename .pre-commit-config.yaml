@@ -1,0 +1,29 @@
+# Pre-commit hooks for argbind-dbraun.
+#
+#   uvx pre-commit install        # run automatically on every `git commit`
+#   uvx pre-commit run --all-files  # run on the whole repo
+#   uvx pre-commit autoupdate     # bump hook versions
+#
+# The ruff hooks read their config (including the `examples` exclude) from
+# pyproject.toml.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      # The modifying hooks below skip example sources and regression fixtures,
+      # whose exact whitespace is asserted verbatim by the test suite.
+      - id: end-of-file-fixer
+        exclude: '^(examples/|tests/regression/)'
+      - id: trailing-whitespace
+        exclude: '^(examples/|tests/regression/)'

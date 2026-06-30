@@ -1,0 +1,25 @@
+usage: with_argbind.py [-h] [--args.save ARGS.SAVE] [--args.load ARGS.LOAD]
+                       [--args.debug ARGS.DEBUG]
+                       [--configure.mode {train,val,test}]
+                       [--configure.level {1,2,3}]
+                       [--configure.backend {cpu,gpu}]
+
+options:
+  -h, --help            show this help message and exit
+  --args.save ARGS.SAVE
+                        Path to save all arguments used to run script to.
+  --args.load ARGS.LOAD
+                        Path to load arguments from, stored as a .yml file.
+  --args.debug ARGS.DEBUG
+                        Print arguments as they are passed to each function.
+
+Generated arguments for function configure:
+  Configure a run using Literal-restricted arguments.
+
+  --configure.mode {train,val,test}
+                        Which split to run, by default 'train'.
+  --configure.level {1,2,3}
+                        An integer level, by default 1.
+  --configure.backend {cpu,gpu}
+                        Optional compute backend; None lets the program decide, by
+                        default None.

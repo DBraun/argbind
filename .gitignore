@@ -94,6 +94,9 @@ ipython_config.py
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
 
+# uv: lockfile intentionally not committed for this library
+uv.lock
+
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
@@ -117,6 +120,9 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+# JetBrains IDEs (PyCharm, IntelliJ)
+.idea/
+
 # mkdocs documentation
 /site
 
@@ -129,3 +135,6 @@ dmypy.json
 .pyre/
 
 scratch.*
+.claude
+.cursor
+.agents

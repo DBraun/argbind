@@ -2,38 +2,43 @@
 
 **Build CLIs via docstrings and type annotations, with YAML support.**
 
-![Build](https://github.com/pseeth/argbind/workflows/Build/badge.svg) 
-[![PyPI version](https://badge.fury.io/py/argbind.svg)](https://badge.fury.io/py/argbind)
-[![codecov](https://codecov.io/gh/pseeth/argbind/branch/main/graph/badge.svg?token=BWI0FHZI5H)](undefined)
-![Lines of code](https://img.shields.io/tokei/lines/github/pseeth/argbind)
-[![Downloads](https://pepy.tech/badge/argbind)](https://pepy.tech/project/argbind)
+[![Tests](https://github.com/DBraun/argbind/actions/workflows/tests.yml/badge.svg)](https://github.com/DBraun/argbind/actions/workflows/tests.yml)
+[![PyPI version](https://badge.fury.io/py/argbind-dbraun.svg)](https://pypi.org/project/argbind-dbraun/)
+[![Python versions](https://img.shields.io/pypi/pyversions/argbind-dbraun)](https://pypi.org/project/argbind-dbraun/)
+[![Downloads](https://static.pepy.tech/badge/argbind-dbraun)](https://pepy.tech/project/argbind-dbraun)
 
-*ArgBind is a simple way to bind function or class arguments to the command line or to .yml files!* 
-It supports scoping of arguments, similar to other frameworks like 
+> **Note:** This is an extended fork of [pseeth/argbind](https://github.com/pseeth/argbind) that
+> adds new features — modern type annotations (PEP 585/604), `Literal` and flexible boolean
+> handling, dataclass `default_factory`, and YAML `$include` — published on PyPI as
+> [`argbind-dbraun`](https://pypi.org/project/argbind-dbraun/). The import name is unchanged
+> (`import argbind`), so it remains a drop-in replacement.
+
+*ArgBind is a simple way to bind function or class arguments to the command line or to .yml files!*
+It supports scoping of arguments, similar to other frameworks like
 [Hydra](https://github.com/facebookresearch/hydra) and
 [gin-config](https://github.com/google/gin-config).
-ArgBind is *very* small (only ~400 lines of code, in one file), can be used to make complex and well-documented command line programs, and allows 
+ArgBind is *very* small (only ~800 lines of code, in one file), can be used to make complex and well-documented command line programs, and allows
 you to configure program execution from .yml files.
 
 If you're migrating from an ArgParse script to an ArgBind script, check out the
-[migration guide](./examples/migration). Scroll down to see some [examples](#examples). Please also look at the 
+[migration guide](./examples/migration). Scroll down to see some [examples](#examples). Please also look at the
 current known [limitations](#limitations-and-known-issues) of ArgBind.
 
 ## Why ArgBind?
 
-I built ArgBind mostly to help me configure my machine learning experiments. ML experiment
-configuration is often highly nested, and can get out of hand quick. I didn't want to switch
-my workflow around too much to accommodate a new framework. Instead, I wanted the scripts
-that I've written to be easily adapted so that I could achieve a few goals:
+ArgBind was written by [Prem Seetharaman](https://github.com/pseeth) to help configure machine
+learning experiments. ML experiment configuration is often highly nested, and can get out of hand
+quickly. Rather than switching workflows around too much to accommodate a new framework, the goal
+was to make already-written scripts easily adaptable, to achieve a few things:
 
 1. Configure scripts using `.yml` files. Be able to save `.yml` files that can be used to rerun scripts the exact same way twice.
 2. Spend time writing actual functions needed to run experiments, not argument parsers.
-3. Be able to run my experiment code from other Python scripts, notebooks, or the command line.
+3. Be able to run experiment code from other Python scripts, notebooks, or the command line.
 4. Be able to specify arguments from the command line directly to various functions.
-5. Be able to use scoping patterns, so I can run a function inside of a `train` scope and `test` scope, with different results (e.g. for getting a train dataset and a test dataset).
+5. Be able to use scoping patterns, so a function can run inside a `train` scope and `test` scope, with different results (e.g., for getting a train dataset and a test dataset).
 
-Nothing out there really fit the bill, so I wrote ArgBind. If you have 
-an `argparse` based script, converting it to ArgBind should be very quick! ArgBind is simple, 
+Nothing out there really fit the bill, so Prem wrote ArgBind. If you have
+an `argparse` based script, converting it to ArgBind should be very quick! ArgBind is simple,
 small, and easy to use. To get a feel for how it works, check out [usage](#usage), [design](#design), and [examples](#examples)!
 
 ## Installation
@@ -41,15 +46,30 @@ small, and easy to use. To get a feel for how it works, check out [usage](#usage
 Install via `pip`:
 
 ```
-python -m pip install argbind
+python -m pip install argbind-dbraun
 ```
 
 Or from source:
 
 ```
-git clone https://github.com/pseeth/argbind.git
+git clone https://github.com/DBraun/argbind.git
 cd argbind
 python -m pip install -e .
+```
+
+This project uses [uv](https://docs.astral.sh/uv/). To create a dev environment with the
+test dependencies and run the suite:
+
+```
+uv sync --extra tests
+uv run pytest
+```
+
+Install the [pre-commit](https://pre-commit.com/) hooks (ruff format + lint) so they run
+on every commit:
+
+```
+uvx pre-commit install
 ```
 
 ## Examples
@@ -57,15 +77,18 @@ python -m pip install -e .
 - [Example 1: Hello World](./examples/hello_world/)
 - [Example 2: Scope patterns](./examples/scoping/)
 - [Example 3: Typing](./examples/typing/)
-- [Example 4: MNIST Script](./examples/mnist/)
-- [Example 5: Loading, saving, and using .yml files](./examples/yaml)
-- [Example 6: Multi-stage programs](./examples/multistage)
-- [Example 7: Mimic more traditional CLI, without `func.arg` notation](./examples/without_prefix)
-- [Example 8: Debug mode](./examples/debug)
-- [Example 9: Migrating from ArgParse](./examples/migration)
-- [Example 10: Binding existing functions and classes](./examples/bind_existing)
-- [Example 11: Binding entire modules](./examples/bind_module)
-- [Example 12: Binding functions to specific groups](./examples/groups)
+- [Example 4: Modern type annotations (PEP 585/604)](./examples/modern_typing)
+- [Example 5: Literal arguments](./examples/literal)
+- [Example 6: Flexible boolean syntax](./examples/booleans)
+- [Example 7: Using default_factory with dataclasses](./examples/default_factory)
+- [Example 8: Loading, saving, and using .yml files](./examples/yaml)
+- [Example 9: Nested .yml files with `$include`](./examples/nested_yaml)
+- [Example 10: Multi-stage programs](./examples/multistage)
+- [Example 11: Mimic more traditional CLI, without `func.arg` notation](./examples/without_prefix)
+- [Example 12: Debug mode](./examples/debug)
+- [Example 13: Migrating from ArgParse](./examples/migration)
+- [Example 14: Binding existing functions and classes](./examples/bind_existing)
+- [Example 15: Binding functions to specific groups](./examples/groups)
 
 ## Usage
 
@@ -87,7 +110,7 @@ Your code with ArgBind generally follows this pattern:
 5. Optionally call program with `--args.save` to save the current execution configuration to a `.yml` file or `--args.load` to load arguments from a prior saved execution configuration to run it the same way twice.
 6. Optionally, run your script with `--args.debug=1` to see exactly how every bound function is called.
 
-In your program, you can call `get_used_args` to inspect the state of the argument dictionary. Here's a minimal example:
+In your program, you can call `get_used_args` to see which arguments were actually used. Here's a minimal example:
 
 ```python
 import argbind
@@ -109,10 +132,13 @@ if __name__ == "__main__":
     # Arguments for CLI automatically generated from bound functions under the pattern
     # function_name.function_arg.
     args = argbind.parse_args()
-    # When called within a scope, the keyword arguments map to those from CLI or 
+    # When called within a scope, the keyword arguments map to those from CLI or
     # from defaults.
     with argbind.scope(args):
         hello()
+    # get_used_args() returns the arguments that were actually used by the bound
+    # functions that ran -- here, {'hello.name': 'world'}.
+    print(argbind.get_used_args())
 ```
 
 Help text is automatically generated from the docstring:
@@ -165,7 +191,7 @@ You can also run the `hello` function from another Python script or a Jupyter no
 ```python
 import argbind
 # Import the bound function
-from .hello_world import hello 
+from .hello_world import hello
 # Load the args
 args = argbind.load_args('/tmp/args.yml')
 # Scope the args
@@ -179,8 +205,8 @@ with argbind.scope(args):
     hello() # Prints 'Hello me'.
 ```
 
-You'll notice that ArgBind forces you to document and type your 
-function arguments, which is always a good idea! 
+You'll notice that ArgBind forces you to document and type your
+function arguments, which is always a good idea!
 Please check out the [examples](#examples) for more details!
 
 
@@ -188,15 +214,15 @@ Please check out the [examples](#examples) for more details!
 
 ArgBind is designed around a decorator that can be used on
 functions the user wants to expose to command line or to a .yml file.
-The arguments to that function are 
-then bound to a dictionary. When the function is called, 
+The arguments to that function are
+then bound to a dictionary. When the function is called,
 each argument is looked up in the dictionary and its
 value is replaced with the corresponding value in the dictionary. The
 dictionary that the function looks for values in is controlled by
 `scope`:
 
 ```python
-import argbind 
+import argbind
 
 @argbind.bind()
 def func(arg : str = 'default'):
@@ -216,7 +242,7 @@ with argbind.scope(dict2):
 func(arg=3) # prints 3.
 ```
 
-The function arguments are bound to the command line. Continuing the 
+The function arguments are bound to the command line. Continuing the
 simple program from above:
 
 ```python
@@ -250,22 +276,14 @@ You can also use `bind` directly on classes - see [here](./examples/bind_existin
 
 # Limitations and known issues
 
-There are some limitations to ArgBind, some due to how Python function decorator works,
+There are some limitations to ArgBind, some due to how Python function decorators work,
 and others out of a desire to keep ArgBind's code simple and straightforward.
-
-## Boolean keyword arguments
-
-If a boolean is flipped to True in a `.yml` file, there's no
-way to override it from the command line. If you want a flag to
-be flippable, make the argument an int instead of a bool and use
-0 and 1 for True and False. Then you can override from command
-line like `--func.arg 0` or `--func.arg 1`.
 
 ## Bound function names should be unique
 
-Functions that are bound must be unique, even if they are in different files. The 
+Functions that are bound must be unique, even if they are in different files. The
 function name is resolved in the argument parser only using the immediate name, not
-a path to the function etc. 
+a path to the function etc.
 
 ## Supported docstring formats
 
@@ -274,40 +292,18 @@ the only supported styles are: ReST, Google, and Numpydoc-style docstrings.
 
 ## Not all types are supported
 
-ArgBind supports most types that might pop up in your script, but not all. The supported types can be seen in the [typing example](./examples/typing/).
+ArgBind supports most types that might pop up in your script, but not all. The
+supported types can be seen in the [typing](./examples/typing/) and
+[modern annotations](./examples/modern_typing/) examples.
 
 ## Positional arguments should not be saved into .yml files
 
-If the a positional argument is saved into a .yml file, and loaded
-via `--args.load`, then any positional argument passed in the
-command line will be overridden. Take care not to pass in 
-positional arguments via `.yml` files.
-
-# Releasing
-
-Do the following steps:
-
-```
-python setup.py sdist
-```
-
-Upload it to test PyPI:
-
-```
-pip install twine
-twine upload --repository testpypi dist/*
-pip install -U --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple -U argbind
-```
-
-Make sure you can install it and it works (e.g. run the examples). Now upload
-to actual PyPI:
-
-```
-twine upload dist/*
-```
+If a positional argument is saved into a .yml file and loaded via `--args.load`,
+then any positional argument passed in the command line will be overridden. Take
+care not to pass positional arguments via `.yml` files.
 
 # Issues? Questions?
 
-If you've run into some issues with ArgBind, or have some questions, please ask 
-via Github Issues. Projects like ArgBind are pretty tricky to get right, so there
+If you've run into some issues with ArgBind, or have some questions, please ask
+via GitHub Issues. Projects like ArgBind are pretty tricky to get right, so there
 may be some edge cases that have been missed.

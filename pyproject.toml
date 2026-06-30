@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argbind-dbraun"
+version = "0.5.2"
+description = "Simple way to bind function arguments to the command line. An extended fork of pseeth/argbind with new features (imported as `argbind`)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Prem Seetharaman", email = "prem@descript.com"}]
+maintainers = [{name = "David Braun", email = "braun@ccrma.stanford.edu"}]
+keywords = ["command-line", "configuration", "yaml", "argument", "parsing"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+]
+dependencies = ["pyyaml", "docstring-parser"]
+
+[project.optional-dependencies]
+tests = ["pytest", "pytest-cov"]
+lint = ["ruff"]
+
+[project.urls]
+Homepage = "https://github.com/DBraun/argbind/"
+Repository = "https://github.com/DBraun/argbind/"
+"Original project" = "https://github.com/pseeth/argbind/"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "D417"]
+ignore = [
+    "E501",  # line length is enforced by the formatter
+    "E701",  # allow terse `if cond: stmt` one-liners
+]
+
+[tool.ruff.lint.pydocstyle]
+# Enables D417 to flag documented functions whose docstring omits a parameter.
+convention = "numpy"
+
+[tool.setuptools.package-data]
+argbind = ["py.typed"]
+
+[tool.pytest.ini_options]
+addopts = "--cov-report=term-missing --cov-report=xml --cov=argbind/"
+markers = [
+    "snapshot: golden-file tests comparing full CLI output; pinned to one canonical interpreter (Python 3.12)",
+]
+
+[tool.coverage.report]
+exclude_lines = ["raise NotImplementedError"]

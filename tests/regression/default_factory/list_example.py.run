@@ -1,0 +1,4 @@
+Example(
+  my_list : _HAS_DEFAULT_FACTORY_CLASS = <factory>
+)
+Example(my_list=[1, 2, 3])

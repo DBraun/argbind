@@ -1,0 +1,5 @@
+Example(
+  on : bool = True
+  off : bool = False
+)
+Example(on=True, off=False)

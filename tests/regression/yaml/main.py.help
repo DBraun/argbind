@@ -24,3 +24,4 @@ Generated arguments for function func:
   --func.arg4 FUNC.ARG4
                         Argument 4, by default 'default'
   --func.arg5 FUNC.ARG5
+                        Argument 5, by default ['default']

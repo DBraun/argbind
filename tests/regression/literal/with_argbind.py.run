@@ -1,0 +1,6 @@
+configure(
+  mode : str = train
+  level : int = 1
+  backend : NoneType = None
+)
+mode='train' level=1 backend=None

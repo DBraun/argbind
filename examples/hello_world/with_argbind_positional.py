@@ -19,14 +19,12 @@ Generated arguments for function hello:
   --hello.notes HELLO.NOTES
                         Some optional notes about the person.
 """
+
 import argbind
 
+
 @argbind.bind(positional=True)
-def hello(
-    name : str,
-    email : str,
-    notes : str = "notes"
-):
+def hello(name: str, email: str, notes: str = "notes"):
     """Say hello to someone.
 
     Parameters
@@ -38,14 +36,15 @@ def hello(
     notes : str, optional
         Some optional notes about the person.
     """
-    print("Hello " + name + ' at ' + email)
+    print("Hello " + name + " at " + email)
     print(f"About {name}: {notes}")
+
 
 if __name__ == "__main__":
     # Arguments for CLI automatically generated from bound functions under the pattern
     # function_name.function_arg.
     args = argbind.parse_args()
-    # When called within a scope, the keyword arguments map to those from CLI or 
+    # When called within a scope, the keyword arguments map to those from CLI or
     # from defaults.
     with argbind.scope(args):
         hello()

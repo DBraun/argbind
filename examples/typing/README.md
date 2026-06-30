@@ -11,9 +11,15 @@ signature. The following types are supported:
     - Passed in on command line like "x=y a=1", which maps to `{'x': 'y', 'a': 1}`. The types of each value are inferred by evaluating the
     string.
 - Lists
-    - Lists should also be typed and all be of one type, like `List[int]` or `List[str]`. They're passed in like on command line as space-delimited strings: "a b c", or "1 2 3".
+    - Lists should also be typed and all be of one type, like `List[int]` or `List[str]`. They're passed in on command line as space-delimited strings: "a b c", or "1 2 3".
+    - **Pattern 1: Optional lists** - Use `List[str] = None` when the list is optional and might not be provided. If not provided from command line, the value remains `None`.
+    - **Pattern 2: Lists with default values** - Use `field(default_factory=lambda: [...])` in dataclasses when you always want a list with specific default contents. See the [default_factory example](../default_factory) for more details.
 - Booleans
-    - Passed in as flags from command line, like `--func.bool_arg`, which will set it to True. Make the default False.
+    - For booleans **with defaults**, ArgBind supports flexible syntax:
+        - **Flag-style**: `--func.bool_arg` sets to `True`
+        - **Value-style**: `--func.bool_arg=0` or `--func.bool_arg=1`, `--func.bool_arg=true` or `--func.bool_arg=false`
+    - Both syntaxes can be mixed and matched. This allows you to easily flip boolean values from both command line and `.yml` files.
+    - Booleans **without defaults** use flag-only syntax.
 - Tuples
     - Tuples must be strongly typed, with each entry in the expected tuple typed, like this `Tuple[int, float, str]`.
 
@@ -114,3 +120,65 @@ List of strings argument - type: <class 'list'>, val: ['a', 'b', 'c']
 Boolean argument - type: <class 'bool'>, val: True
 Tuple of (int, float, str) - type: <class 'tuple'>, val: (1, 1.0, 'number1')
 ```
+
+## Flexible Boolean Syntax
+
+Booleans with defaults support both flag-style and value-style syntax:
+
+```bash
+# Flag-style (sets to True)
+❯ python examples/typing/with_argbind.py --func.bool_arg
+Boolean argument - type: <class 'bool'>, val: True
+
+# Value-style with 0/1
+❯ python examples/typing/with_argbind.py --func.bool_arg=0
+Boolean argument - type: <class 'bool'>, val: False
+
+❯ python examples/typing/with_argbind.py --func.bool_arg=1
+Boolean argument - type: <class 'bool'>, val: True
+
+# Value-style with true/false
+❯ python examples/typing/with_argbind.py --func.bool_arg=false
+Boolean argument - type: <class 'bool'>, val: False
+
+# You can also use True/False (capitalized)
+❯ python examples/typing/with_argbind.py --func.bool_arg=True
+Boolean argument - type: <class 'bool'>, val: True
+```
+
+This flexibility makes it easy to set booleans to either `True` or `False` from the command line or `.yml` files.
+
+## Optional Lists with None Default
+
+When you use `List[str] = None`, the argument is optional. If not provided, it remains `None`:
+
+```bash
+# Without providing the list - stays None
+❯ python examples/typing/with_argbind.py
+String argument - type: <class 'str'>, val: string
+Integer argument - type: <class 'int'>, val: 1
+Dictionary argument - type: <class 'NoneType'>, val: None
+List of ints argument - type: <class 'NoneType'>, val: None
+List of strings argument - type: <class 'NoneType'>, val: None
+Boolean argument - type: <class 'bool'>, val: False
+Tuple of (int, float, str) - type: <class 'NoneType'>, val: None
+
+# Providing the list - becomes a list
+❯ python examples/typing/with_argbind.py --func.list_str_arg "a b c"
+...
+List of strings argument - type: <class 'list'>, val: ['a', 'b', 'c']
+...
+```
+
+This is useful when a list argument is **optional** and you want to check if it was provided:
+
+```python
+@argbind.bind()
+def func(files: List[str] = None):
+    if files is None:
+        print("No files provided")
+    else:
+        print(f"Processing {len(files)} files")
+```
+
+For lists that should **always have a value** (even if empty), use `field(default_factory=lambda: [])` in dataclasses instead. See [Example 5: Using default_factory](../default_factory).

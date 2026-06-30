@@ -1,5 +1,5 @@
-from ast import arg
 import argbind
+
 
 @argbind.bind()
 def main(
@@ -7,6 +7,7 @@ def main(
     y: int = 3,
 ):
     print(x, y)
+
 
 if __name__ == "__main__":
     args = argbind.parse_args()

@@ -1,5 +1,5 @@
 usage: with_argbind.py [-h] [--args.save ARGS.SAVE] [--args.load ARGS.LOAD]
-                       [--args.debug ARGS.DEBUG] [--MyClass.x MYCLASS.X]
+                       [--args.debug ARGS.DEBUG] [--BoundClass.x BOUNDCLASS.X]
                        [--my_func.x MY_FUNC.X]
 
 options:
@@ -11,12 +11,12 @@ options:
   --args.debug ARGS.DEBUG
                         Print arguments as they are passed to each function.
 
-Generated arguments for function MyClass:
+Generated arguments for function BoundClass:
    Additional scope patterns: pattern. Use these by prefacing
   any of the args below with one of these patterns. For
-  example: --pattern/MyClass.x VALUE.
+  example: --pattern/BoundClass.x VALUE.
 
-  --MyClass.x MYCLASS.X
+  --BoundClass.x BOUNDCLASS.X
 
 Generated arguments for function my_func:
 
