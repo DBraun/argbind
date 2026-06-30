@@ -733,21 +733,16 @@ def parse_args(p=None, group: Union[list, str] = "default"):
     pattern_keys = [key for key in args if "/" in key]
     top_level_args = [key for key in args if "/" not in key]
 
-    for key in pattern_keys:
-        # If the top-level arguments were altered but the ones
-        # in patterns were not, change the scoped ones to
-        # match the top-level (inherit arguments from top-level).
-        pattern, arg_name = key.split("/")
-        if key not in used_args:
-            args[key] = args[arg_name]
+    # If the top-level arguments were altered but the scoped ones were not,
+    # change the scoped ones to match the top-level (inherit from top-level).
+    args |= {
+        key: args[key.split("/")[1]] for key in pattern_keys if key not in used_args
+    }
 
     if load_args_path:
         loaded_args = load_args(load_args_path)
-        # Overwrite defaults with things in loaded arguments.
-        # except for things that came from the command line.
-        for key in loaded_args:
-            if key not in used_args:
-                args[key] = loaded_args[key]
+        # Overwrite defaults with loaded arguments, except those from the command line.
+        args |= {k: v for k, v in loaded_args.items() if k not in used_args}
         for key in pattern_keys:
             pattern, arg_name = key.split("/")
             if key not in loaded_args and key not in used_args:
