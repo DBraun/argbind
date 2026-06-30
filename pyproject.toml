@@ -41,11 +41,15 @@ line-length = 88
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "D417"]
 ignore = [
     "E501",  # line length is enforced by the formatter
     "E701",  # allow terse `if cond: stmt` one-liners
 ]
+
+[tool.ruff.lint.pydocstyle]
+# Enables D417 to flag documented functions whose docstring omits a parameter.
+convention = "numpy"
 
 [tool.setuptools.package-data]
 argbind = ["py.typed"]

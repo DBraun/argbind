@@ -87,6 +87,10 @@ def bind(
         Arguments that are not keyword arguments are not bound by default. If
         this is True, then the arguments will be bound as positional arguments
         in some order, by default False
+    group : list or str, optional
+        Group or list of groups to assign this function to. ``build_parser``
+        and ``parse_args`` can then build a parser for only a subset of bound
+        functions by group, by default "default".
     """
 
     if args and not isinstance(args[0], str):
@@ -486,7 +490,7 @@ def _cast_value(value, target_type):
 
 
 def build_parser(group: Union[list, str] = "default"):
-    """Builds the argument parser from all of the bound functions.
+    """Builds the argument parser from all the bound functions.
 
     Returns
     -------

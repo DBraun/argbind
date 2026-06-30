@@ -82,4 +82,4 @@ Generated arguments for function analyze:
 Generated arguments for function run:
   Run stages.
 
-  stage
+  stage                 Stage to run

@@ -145,7 +145,7 @@ def run(stage: str):
 
     Parameters
     ----------
-    stages : str
+    stage : str
         Stage to run
     """
     with output():

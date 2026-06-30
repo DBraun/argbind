@@ -23,6 +23,8 @@ def func(
         Argument 3, by default 'default'
     arg4 : str, optional
         Argument 4, by default 'default'
+    arg5 : list of str, optional
+        Argument 5, by default ['default']
     """
     print(
         f"Argument 1: {arg1}\n"
