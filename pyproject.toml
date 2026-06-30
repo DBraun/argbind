@@ -3,13 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "argbind"
-version = "0.5.1"
-description = "Simple way to bind function arguments to the command line."
+name = "argbind-dbraun"
+version = "0.5.2"
+description = "Simple way to bind function arguments to the command line. Maintained fork of pseeth/argbind (imported as `argbind`)."
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [{name = "Prem Seetharaman", email = "prem@descript.com"}]
+maintainers = [{name = "David Braun", email = "braun@ccrma.stanford.edu"}]
 keywords = ["command-line", "configuration", "yaml", "argument", "parsing"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -27,14 +28,33 @@ classifiers = [
 dependencies = ["pyyaml", "docstring-parser"]
 
 [project.optional-dependencies]
-tests = ["pytest", "pytest-cov", "torch", "torchvision"]
-examples = ["torch", "torchvision"]
+tests = ["pytest", "pytest-cov"]
+lint = ["ruff"]
 
 [project.urls]
-Homepage = "https://github.com/pseeth/argbind/"
+Homepage = "https://github.com/DBraun/argbind/"
+Repository = "https://github.com/DBraun/argbind/"
+"Original project" = "https://github.com/pseeth/argbind/"
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = [
+    "E501",  # line length is enforced by the formatter
+    "E701",  # allow terse `if cond: stmt` one-liners
+]
+
+[tool.setuptools.package-data]
+argbind = ["py.typed"]
 
 [tool.pytest.ini_options]
 addopts = "--cov-report=term-missing --cov-report=xml --cov=argbind/"
+markers = [
+    "snapshot: golden-file tests comparing full CLI output; pinned to one canonical interpreter (Python 3.12)",
+]
 
 [tool.coverage.report]
 exclude_lines = ["raise NotImplementedError"]

@@ -1,4 +1,17 @@
 # Changelog
+## v0.5.2
+First release as a maintained fork of [pseeth/argbind](https://github.com/pseeth/argbind),
+published to PyPI as **`argbind-dbraun`** (`pip install argbind-dbraun`). The import name is
+unchanged — still `import argbind` — so it is a drop-in replacement for existing code and
+`.yml` configs.
+
+- **Breaking:** the long-deprecated `bind_to_parser` alias (kept for `argbind<=0.1.3`) is removed;
+  use `argbind.bind` instead.
+- Ships a `py.typed` marker (PEP 561), so downstream type checkers pick up its annotations.
+- Removed the PyTorch-based `mnist` and `bind_module` examples; `bind_module` is now covered by a
+  torch-free unit test, and the test suite no longer requires `torch`.
+- Internal: `load_args` / `dump_args` use `pathlib` instead of `os.path` (no behavior change).
+
 ## v0.5.1
 - **`$include` is resolved relative to the including file**, not the process CWD. A config and its
   `$include` tree now load identically regardless of where they are invoked from — including from a
@@ -51,7 +64,7 @@
 - Binding `__init__` functions uses as the prefix the name of the class, rather than `__init__`.
 
 ## v0.2.0
-- Fixed a bug in resolving variables in lists, introduced in v0.1.8. 
+- Fixed a bug in resolving variables in lists, introduced in v0.1.8.
 
 ## v0.1.9
 - Positional arguments can now be bound with `positional=True`. ArgBind should now be able to build programs
@@ -62,17 +75,17 @@
 - Variables now resolve not only for strings but also within lists of strings.
 
 ## v0.1.7
-- Updated the behavior of `args.debug` to create a prettier and more readable 
+- Updated the behavior of `args.debug` to create a prettier and more readable
   output.
 
 ## v0.1.6
 - Added `without_prefix` option to `bind`, which exposes the keyword arguments
-  without the function name as the prefix, if `without_prefix=True`. There was 
+  without the function name as the prefix, if `without_prefix=True`. There was
   an unused version of this in its place called `no_global` which has now been
   removed.
 
 ## v0.1.5
-- Using `functools.wraps` in the `bind` decorator. This decorates the 
+- Using `functools.wraps` in the `bind` decorator. This decorates the
   function without changing its name.
 
 ## v0.1.4
@@ -90,4 +103,3 @@
 
 ## v0.1.0
 - Initial release.
-
