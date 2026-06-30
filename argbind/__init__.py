@@ -1,11 +1,21 @@
 from .argbind import (
-    bind, 
-    bind_to_parser, # For backwards compat.
+    bind,
     bind_module,
     build_parser,
-    parse_args,
     dump_args,
-    load_args,
     get_used_args,
-    scope
+    load_args,
+    parse_args,
+    scope,
 )
+
+__all__ = [
+    "bind",
+    "bind_module",
+    "build_parser",
+    "parse_args",
+    "dump_args",
+    "load_args",
+    "get_used_args",
+    "scope",
+]
