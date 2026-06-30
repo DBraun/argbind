@@ -399,8 +399,8 @@ class str_to_bool:
 
 
 # PEP 604 unions (X | None) have origin types.UnionType rather than
-# typing.Union on Python 3.10-3.13 (the two are unified in 3.14).
-_UNION_ORIGINS = tuple({Union, getattr(types, "UnionType", Union)})
+# typing.Union on Python 3.11-3.13 (the two are unified in 3.14).
+_UNION_ORIGINS = tuple({Union, types.UnionType})
 
 
 def _unwrap_optional(arg_type):
@@ -476,9 +476,10 @@ def _cast_value(value, target_type):
             )
         return value
 
-    # Fast path: return the value as-is if it is already the right type. Skip
-    # generic aliases like List[int], which are not valid second arguments to
-    # isinstance() (``isinstance(target_type, type)`` is False for them).
+    # Fast path: if the value is already the right type, return it. Parameterized
+    # generics like list[int] are not valid second arguments to isinstance(), but
+    # isinstance(generic, type) is False for them on Python 3.11+, so the guard
+    # skips them safely.
     if isinstance(target_type, type) and isinstance(value, target_type):
         return value
 
@@ -539,11 +540,10 @@ def build_parser(group: Union[list, str] = "default"):
             continue
 
         # Resolve string annotations produced by ``from __future__ import
-        # annotations`` (PEP 563). ``eval_str=True`` (Python 3.10+) evaluates them
-        # in the function's own namespace; if that's unsupported (3.9) or a name
-        # can't be resolved at runtime (e.g. a ``TYPE_CHECKING``-only import), fall
-        # back to the raw, possibly stringized annotations and handle the leftover
-        # strings per-parameter below.
+        # annotations`` (PEP 563). ``eval_str=True`` evaluates them in the
+        # function's own namespace; if a name can't be resolved at runtime (e.g. a
+        # ``TYPE_CHECKING``-only import), fall back to the raw, possibly stringized
+        # annotations and handle the leftover strings per-parameter below.
         try:
             sig = inspect.signature(func, eval_str=True)
         except Exception:

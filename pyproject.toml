@@ -7,7 +7,7 @@ name = "argbind-dbraun"
 version = "0.5.2"
 description = "Simple way to bind function arguments to the command line. An extended fork of pseeth/argbind with new features (imported as `argbind`)."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Prem Seetharaman", email = "prem@descript.com"}]
 maintainers = [{name = "David Braun", email = "braun@ccrma.stanford.edu"}]
@@ -15,8 +15,6 @@ keywords = ["command-line", "configuration", "yaml", "argument", "parsing"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Development Status :: 3 - Alpha",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -38,7 +36,7 @@ Repository = "https://github.com/DBraun/argbind/"
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "D417"]

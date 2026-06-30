@@ -7,6 +7,7 @@ unchanged — still `import argbind` — so it is a drop-in replacement for exis
 
 - **Breaking:** the long-deprecated `bind_to_parser` alias (kept for `argbind<=0.1.3`) is removed;
   use `argbind.bind` instead.
+- **Breaking:** requires Python 3.11+ (was 3.9).
 - Ships a `py.typed` marker (PEP 561), so downstream type checkers pick up its annotations.
 - Removed the PyTorch-based `mnist` and `bind_module` examples; `bind_module` is now covered by a
   torch-free unit test, and the test suite no longer requires `torch`.
