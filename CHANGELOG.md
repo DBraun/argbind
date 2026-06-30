@@ -1,6 +1,6 @@
 # Changelog
 ## v0.5.2
-First release as a maintained fork of [pseeth/argbind](https://github.com/pseeth/argbind),
+First release as an extended fork of [pseeth/argbind](https://github.com/pseeth/argbind),
 published to PyPI as **`argbind-dbraun`** (`pip install argbind-dbraun`). The import name is
 unchanged — still `import argbind` — so it is a drop-in replacement for existing code and
 `.yml` configs.

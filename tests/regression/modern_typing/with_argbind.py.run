@@ -1,0 +1,7 @@
+func(
+  maybe_count : NoneType = None
+  tags : NoneType = None
+  weights : NoneType = None
+  shape : tuple = (1, 2)
+)
+count=None tags=None weights=None shape=(1, 2)

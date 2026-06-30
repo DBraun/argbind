@@ -1,0 +1,28 @@
+usage: with_argbind.py [-h] [--args.save ARGS.SAVE] [--args.load ARGS.LOAD]
+                       [--args.debug ARGS.DEBUG]
+                       [--func.maybe_count FUNC.MAYBE_COUNT]
+                       [--func.tags FUNC.TAGS] [--func.weights FUNC.WEIGHTS]
+                       [--func.shape FUNC.SHAPE]
+
+options:
+  -h, --help            show this help message and exit
+  --args.save ARGS.SAVE
+                        Path to save all arguments used to run script to.
+  --args.load ARGS.LOAD
+                        Path to load arguments from, stored as a .yml file.
+  --args.debug ARGS.DEBUG
+                        Print arguments as they are passed to each function.
+
+Generated arguments for function func:
+  Bind arguments annotated with modern (PEP 585 / PEP 604)
+  syntax.
+
+  --func.maybe_count FUNC.MAYBE_COUNT
+                        An optional integer (PEP 604 union), by default None.
+  --func.tags FUNC.TAGS
+                        A list of strings, space-separated on the CLI, by default
+                        None.
+  --func.weights FUNC.WEIGHTS
+                        A ``key=value`` mapping, by default None.
+  --func.shape FUNC.SHAPE
+                        A fixed-size tuple, by default (1, 2).

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "argbind-dbraun"
 version = "0.5.2"
-description = "Simple way to bind function arguments to the command line. Maintained fork of pseeth/argbind (imported as `argbind`)."
+description = "Simple way to bind function arguments to the command line. An extended fork of pseeth/argbind with new features (imported as `argbind`)."
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}

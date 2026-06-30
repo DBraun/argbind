@@ -7,9 +7,11 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/argbind-dbraun)](https://pypi.org/project/argbind-dbraun/)
 [![Downloads](https://static.pepy.tech/badge/argbind-dbraun)](https://pepy.tech/project/argbind-dbraun)
 
-> **Note:** This is a maintained fork of [pseeth/argbind](https://github.com/pseeth/argbind),
-> published on PyPI as [`argbind-dbraun`](https://pypi.org/project/argbind-dbraun/). The import
-> name is unchanged (`import argbind`), so it is a drop-in replacement.
+> **Note:** This is an extended fork of [pseeth/argbind](https://github.com/pseeth/argbind) that
+> adds new features — modern type annotations (PEP 585/604), `Literal` and flexible boolean
+> handling, dataclass `default_factory`, and YAML `$include` — published on PyPI as
+> [`argbind-dbraun`](https://pypi.org/project/argbind-dbraun/). The import name is unchanged
+> (`import argbind`), so it remains a drop-in replacement.
 
 *ArgBind is a simple way to bind function or class arguments to the command line or to .yml files!*
 It supports scoping of arguments, similar to other frameworks like
@@ -75,15 +77,18 @@ uvx pre-commit install
 - [Example 1: Hello World](./examples/hello_world/)
 - [Example 2: Scope patterns](./examples/scoping/)
 - [Example 3: Typing](./examples/typing/)
-- [Example 4: Flexible boolean syntax](./examples/booleans)
-- [Example 5: Using default_factory with dataclasses](./examples/default_factory)
-- [Example 6: Loading, saving, and using .yml files](./examples/yaml)
-- [Example 7: Multi-stage programs](./examples/multistage)
-- [Example 8: Mimic more traditional CLI, without `func.arg` notation](./examples/without_prefix)
-- [Example 9: Debug mode](./examples/debug)
-- [Example 10: Migrating from ArgParse](./examples/migration)
-- [Example 11: Binding existing functions and classes](./examples/bind_existing)
-- [Example 12: Binding functions to specific groups](./examples/groups)
+- [Example 4: Modern type annotations (PEP 585/604)](./examples/modern_typing)
+- [Example 5: Literal arguments](./examples/literal)
+- [Example 6: Flexible boolean syntax](./examples/booleans)
+- [Example 7: Using default_factory with dataclasses](./examples/default_factory)
+- [Example 8: Loading, saving, and using .yml files](./examples/yaml)
+- [Example 9: Nested .yml files with `$include`](./examples/nested_yaml)
+- [Example 10: Multi-stage programs](./examples/multistage)
+- [Example 11: Mimic more traditional CLI, without `func.arg` notation](./examples/without_prefix)
+- [Example 12: Debug mode](./examples/debug)
+- [Example 13: Migrating from ArgParse](./examples/migration)
+- [Example 14: Binding existing functions and classes](./examples/bind_existing)
+- [Example 15: Binding functions to specific groups](./examples/groups)
 
 ## Usage
 
