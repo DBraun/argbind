@@ -1,5 +1,6 @@
 import argparse
 import ast
+import dataclasses
 import inspect
 import os
 import sys
@@ -7,7 +8,6 @@ import textwrap
 import types
 import warnings
 from contextlib import contextmanager
-from dataclasses import _HAS_DEFAULT_FACTORY_CLASS
 from functools import wraps
 from pathlib import Path
 from typing import Literal, Union, get_args, get_origin
@@ -21,6 +21,19 @@ USED_ARGS = {}
 PATTERN = None
 DEBUG = False
 HELP_WIDTH = 60
+
+
+# A dataclass field with a default_factory shows this singleton as its __init__
+# default; capture it via public API (rather than importing a private name) so it
+# can be filtered out before serialization. See dump_args.
+@dataclasses.dataclass
+class _FactoryProbe:
+    x: list = dataclasses.field(default_factory=list)
+
+
+_DEFAULT_FACTORY_SENTINEL = (
+    inspect.signature(_FactoryProbe.__init__).parameters["x"].default
+)
 
 
 @contextmanager
@@ -234,11 +247,10 @@ def dump_args(args, output_path):
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Filter out _HAS_DEFAULT_FACTORY_CLASS sentinel values
+    # Drop the dataclasses default_factory sentinel; it is not serializable.
     filtered_args = {}
     for key, value in args.items():
-        # Skip if value is an instance of _HAS_DEFAULT_FACTORY_CLASS
-        if type(value) is not _HAS_DEFAULT_FACTORY_CLASS:
+        if value is not _DEFAULT_FACTORY_SENTINEL:
             filtered_args[key] = value
 
     with open(path, "w") as f:
