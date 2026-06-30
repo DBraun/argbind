@@ -80,5 +80,5 @@ Generated arguments for function run:
   Run stages.
 
   --run.stages RUN.STAGES
-                        List of stages to run, by default  ['download',
-                        'preprocess', 'train',   'evaluate', 'analyze']
+                        List of stages to run, by default ['download', 'preprocess',
+                        'train',  'evaluate', 'analyze']

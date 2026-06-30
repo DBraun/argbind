@@ -1,13 +1,15 @@
-import argbind
 import typing
+
+import argbind
+
 
 @argbind.bind()
 def func(
-    arg1 : str = 'default',
-    arg2 : str = 'default',
-    arg3 : str = 'default',
-    arg4 : str = 'default',
-    arg5 : typing.List[str] = ['default'],
+    arg1: str = "default",
+    arg2: str = "default",
+    arg3: str = "default",
+    arg4: str = "default",
+    arg5: typing.List[str] = ["default"],
 ):
     """Dummy function for binding.
 
@@ -29,6 +31,7 @@ def func(
         f"Argument 4: {arg4}\n"
         f"Argument 5: {arg5}"
     )
+
 
 if __name__ == "__main__":
     args = argbind.parse_args()

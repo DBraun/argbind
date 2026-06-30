@@ -20,12 +20,12 @@ Generated arguments for function hello:
                         Who you're saying hello to, by default 'world'
 
 """
+
 import argbind
 
+
 @argbind.bind()
-def hello(
-    name : str = 'world'
-):
+def hello(name: str = "world"):
     """Say hello to someone.
 
     Parameters
@@ -35,11 +35,12 @@ def hello(
     """
     print("Hello " + name)
 
+
 if __name__ == "__main__":
     # Arguments for CLI automatically generated from bound functions under the pattern
     # function_name.function_arg.
     args = argbind.parse_args()
-    # When called within a scope, the keyword arguments map to those from CLI or 
+    # When called within a scope, the keyword arguments map to those from CLI or
     # from defaults.
     with argbind.scope(args):
         hello()

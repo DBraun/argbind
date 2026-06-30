@@ -1,5 +1,5 @@
-from ast import arg
 import argbind
+
 
 @argbind.bind()
 class Example:
@@ -11,7 +11,6 @@ class Example:
     def some_class_method(cls, y: int = 2):
         print("I'm a class method")
         pass
-
 
 
 if __name__ == "__main__":

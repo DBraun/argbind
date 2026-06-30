@@ -1,14 +1,16 @@
-import argbind
-from typing import List
-from pathlib import Path
 import os
 from contextlib import contextmanager
+from pathlib import Path
+from typing import List
 
-STAGES = ['download', 'preprocess', 'train', 'evaluate', 'analyze']
+import argbind
+
+STAGES = ["download", "preprocess", "train", "evaluate", "analyze"]
+
 
 @argbind.bind()
 @contextmanager
-def output(folder : str = '/tmp/output'):
+def output(folder: str = "/tmp/output"):
     """Controls the output folder where everything gets saved.
     Switches the scripts working directory to this folder.
 
@@ -28,12 +30,11 @@ def output(folder : str = '/tmp/output'):
         yield
     finally:
         os.chdir(curdir)
-        print(f"Returning to original folder")
+        print("Returning to original folder")
+
 
 @argbind.bind()
-def download(
-    folder : str = '/data/raw'
-):
+def download(folder: str = "/data/raw"):
     """Download data to folder.
 
     Parameters
@@ -46,11 +47,9 @@ def download(
     print(f"Downloading data to {folder}")
     print()
 
+
 @argbind.bind()
-def preprocess(
-    src_folder : str = '/data/raw',
-    dst_folder : str = '/data/processed'
-):
+def preprocess(src_folder: str = "/data/raw", dst_folder: str = "/data/processed"):
     """Preprocess data.
 
     Parameters
@@ -62,17 +61,18 @@ def preprocess(
     """
     src_folder = Path(src_folder)
     dst_folder = Path(dst_folder)
-    print(f"STAGE: PREPROCESS")
+    print("STAGE: PREPROCESS")
     print(f"Preprocessing {src_folder} into {dst_folder}")
     print()
 
+
 @argbind.bind()
 def train(
-    folder : str = '/data/processed/train/',
-    epochs : int = 50,
-    lr : float = 1e-3,
-    model_type : str = 'conv',
-    model_path : str = 'checkpoints/model.pth'
+    folder: str = "/data/processed/train/",
+    epochs: int = 50,
+    lr: float = 1e-3,
+    model_type: str = "conv",
+    model_path: str = "checkpoints/model.pth",
 ):
     """Train the model.
 
@@ -90,17 +90,20 @@ def train(
         Where to save model to, by default 'checkpoints/model.pth'
     """
     print("STAGE: TRAIN")
-    print(f"Training model {model_type} on data in {folder} "
-          f"for {epochs} epochs, with learning rate of {lr}")
+    print(
+        f"Training model {model_type} on data in {folder} "
+        f"for {epochs} epochs, with learning rate of {lr}"
+    )
     Path(model_path).parent.mkdir(exist_ok=True, parents=True)
     Path(model_path).touch()
     print()
 
+
 @argbind.bind()
 def evaluate(
-    model_path : str = 'checkpoints/model.pth',
-    folder : str = '/data/processed/test/',
-    results_folder : str = './results'
+    model_path: str = "checkpoints/model.pth",
+    folder: str = "/data/processed/test/",
+    results_folder: str = "./results",
 ):
     """Evaluate the model.
 
@@ -114,16 +117,16 @@ def evaluate(
         Folder to save results into, by default './results'
     """
     print("STAGE: EVALUATE")
-    print(f"Evaluating model {model_path} on {folder}, "
-          f"saving results to {results_folder}")
+    print(
+        f"Evaluating model {model_path} on {folder}, saving results to {results_folder}"
+    )
     Path(results_folder).mkdir(parents=True, exist_ok=True)
-    (Path(results_folder) / 'example.npy').touch()
+    (Path(results_folder) / "example.npy").touch()
     print()
 
+
 @argbind.bind()
-def analyze(
-    results_folder : str = './results'
-):
+def analyze(results_folder: str = "./results"):
     """Analyze model performance, make plots.
 
     Parameters
@@ -133,18 +136,19 @@ def analyze(
     """
     print("STAGE: ANALYZE")
     print(f"Generating plots for {results_folder}")
-    (Path(results_folder) / 'example.png').touch()
+    (Path(results_folder) / "example.png").touch()
     print()
 
+
 @argbind.bind()
-def run(stages : List[str] = STAGES):
+def run(stages: List[str] = STAGES):
     """Run stages.
 
     Parameters
     ----------
     stages : List[str], optional
-        List of stages to run, by default 
-        ['download', 'preprocess', 'train', 
+        List of stages to run, by default
+        ['download', 'preprocess', 'train',
          'evaluate', 'analyze']
     """
     with output():
@@ -155,6 +159,7 @@ def run(stages : List[str] = STAGES):
                 )
             stage_fn = globals()[stage]
             stage_fn()
+
 
 if __name__ == "__main__":
     args = argbind.parse_args()

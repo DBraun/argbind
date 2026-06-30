@@ -38,41 +38,6 @@ hello(
 Hello test
 ```
 
-## MNIST
-
-```
-❯ python examples/mnist/with_argbind_and_refactor.py --args.debug=1 --main.epochs=1 --train.dry_run
-main(
-  epochs : int = 1
-  no_cuda : bool = False
-  seed : int = 1
-  save_model : bool = False
-)
-dataset(
-  # scope = train
-  folder : str = ../data
-  split : str = train
-  batch_size : int = 64
-)
-dataset(
-  # scope = test
-  folder : str = ../data
-  split : str = train
-  batch_size : int = 64
-)
-optimizer(
-  lr : float = 1.0
-)
-scheduler(
-  step_size : int = 1
-  gamma : float = 0.7
-)
-train(
-  log_interval : int = 10
-  dry_run : bool = True
-)
-```
-
 ## Shows types
 
 ```

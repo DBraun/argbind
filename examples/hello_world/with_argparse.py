@@ -9,11 +9,11 @@ optional arguments:
   --name NAME  Who you're saying hello to.
 
 """
+
 import argparse
 
-def hello(
-    name : str = 'world'
-):
+
+def hello(name: str = "world"):
     """Say hello to someone.
 
     Parameters
@@ -23,6 +23,7 @@ def hello(
     """
     print("Hello " + name)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -30,4 +31,4 @@ if __name__ == "__main__":
     )
 
     args = vars(parser.parse_args())
-    hello(args['name'])
+    hello(args["name"])

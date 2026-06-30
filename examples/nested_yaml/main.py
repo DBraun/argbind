@@ -1,11 +1,12 @@
 import argbind
 
+
 @argbind.bind()
 def func(
-    arg1 : str = 'default',
-    arg2 : str = 'default',
-    arg3 : str = 'default',
-    arg4 : str = 'default',
+    arg1: str = "default",
+    arg2: str = "default",
+    arg3: str = "default",
+    arg4: str = "default",
 ):
     """Dummy function for binding.
 
@@ -26,6 +27,7 @@ def func(
         f"Argument 3: {arg3}\n"
         f"Argument 4: {arg4}\n"
     )
+
 
 if __name__ == "__main__":
     args = argbind.parse_args()

@@ -5,6 +5,7 @@ and PEP 604 unions (X | None). These are the forms that pyupgrade
 --py310-plus rewrites typing.List/typing.Optional into, so bound signatures
 in downstream code bases use them extensively.
 """
+
 import os
 import subprocess
 import sys
@@ -64,18 +65,21 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults",
-            "args": [],
-            "expected": "a=None,b=None,c=None",
-        },
-        {
-            "name": "cli_overrides_are_typed",
-            "args": ["--func.a=hello", "--func.b=5", "--func.c=0.5"],
-            "expected": "a='hello',b=5,c=0.5",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults",
+                "args": [],
+                "expected": "a=None,b=None,c=None",
+            },
+            {
+                "name": "cli_overrides_are_typed",
+                "args": ["--func.a=hello", "--func.b=5", "--func.c=0.5"],
+                "expected": "a='hello',b=5,c=0.5",
+            },
+        ],
+    )
 
 
 @requires_pep604
@@ -93,12 +97,19 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {"name": "default", "args": [], "expected": "flag=None"},
-        {"name": "flag_style", "args": ["--func.flag"], "expected": "flag=True"},
-        {"name": "value_true", "args": ["--func.flag=1"], "expected": "flag=True"},
-        {"name": "value_false", "args": ["--func.flag=0"], "expected": "flag=False"},
-    ])
+    check_cases(
+        source,
+        [
+            {"name": "default", "args": [], "expected": "flag=None"},
+            {"name": "flag_style", "args": ["--func.flag"], "expected": "flag=True"},
+            {"name": "value_true", "args": ["--func.flag=1"], "expected": "flag=True"},
+            {
+                "name": "value_false",
+                "args": ["--func.flag=0"],
+                "expected": "flag=False",
+            },
+        ],
+    )
 
 
 def test_pep585_lists():
@@ -119,19 +130,28 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults_stay_none",
-            "args": [],
-            "expected": "ints=None,strs=None,floats=None",
-        },
-        {
-            "name": "cli_overrides_are_typed",
-            "args": ["--func.ints", "1 2 3", "--func.strs", "a b",
-                     "--func.floats", "0.5 1.5"],
-            "expected": "ints=[1, 2, 3],strs=['a', 'b'],floats=[0.5, 1.5]",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults_stay_none",
+                "args": [],
+                "expected": "ints=None,strs=None,floats=None",
+            },
+            {
+                "name": "cli_overrides_are_typed",
+                "args": [
+                    "--func.ints",
+                    "1 2 3",
+                    "--func.strs",
+                    "a b",
+                    "--func.floats",
+                    "0.5 1.5",
+                ],
+                "expected": "ints=[1, 2, 3],strs=['a', 'b'],floats=[0.5, 1.5]",
+            },
+        ],
+    )
 
 
 def test_pep585_dicts():
@@ -148,18 +168,21 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults_stay_none",
-            "args": [],
-            "expected": "plain=None,typed=None",
-        },
-        {
-            "name": "cli_overrides",
-            "args": ["--func.plain", "x=5 y=a", "--func.typed", "a=1 b=2"],
-            "expected": "plain={'x': 5, 'y': 'a'},typed={'a': 1, 'b': 2}",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults_stay_none",
+                "args": [],
+                "expected": "plain=None,typed=None",
+            },
+            {
+                "name": "cli_overrides",
+                "args": ["--func.plain", "x=5 y=a", "--func.typed", "a=1 b=2"],
+                "expected": "plain={'x': 5, 'y': 'a'},typed={'a': 1, 'b': 2}",
+            },
+        ],
+    )
 
 
 def test_pep585_tuples():
@@ -179,18 +202,21 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults",
-            "args": [],
-            "expected": "fixed=None,variadic=(1, 5, 10)",
-        },
-        {
-            "name": "cli_overrides",
-            "args": ["--func.fixed", "1 2.5 abc", "--func.variadic", "2 4 8 16"],
-            "expected": "fixed=(1, 2.5, 'abc'),variadic=(2, 4, 8, 16)",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults",
+                "args": [],
+                "expected": "fixed=None,variadic=(1, 5, 10)",
+            },
+            {
+                "name": "cli_overrides",
+                "args": ["--func.fixed", "1 2.5 abc", "--func.variadic", "2 4 8 16"],
+                "expected": "fixed=(1, 2.5, 'abc'),variadic=(2, 4, 8, 16)",
+            },
+        ],
+    )
 
 
 @requires_pep604
@@ -211,14 +237,17 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {"name": "defaults", "args": [], "expected": "ints=None,cfg=None"},
-        {
-            "name": "cli_overrides",
-            "args": ["--func.ints", "4 5", "--func.cfg", "lr=1e-3"],
-            "expected": "ints=[4, 5],cfg={'lr': 0.001}",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {"name": "defaults", "args": [], "expected": "ints=None,cfg=None"},
+            {
+                "name": "cli_overrides",
+                "args": ["--func.ints", "4 5", "--func.cfg", "lr=1e-3"],
+                "expected": "ints=[4, 5],cfg={'lr': 0.001}",
+            },
+        ],
+    )
 
 
 @requires_pep604
@@ -237,14 +266,17 @@ if __name__ == "__main__":
     with argbind.scope(args):
         Model()
 """
-    check_cases(source, [
-        {"name": "defaults", "args": [], "expected": "tags=None,dim=None"},
-        {
-            "name": "cli_overrides",
-            "args": ["--Model.tags", "a b c", "--Model.dim=8"],
-            "expected": "tags=['a', 'b', 'c'],dim=8",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {"name": "defaults", "args": [], "expected": "tags=None,dim=None"},
+            {
+                "name": "cli_overrides",
+                "args": ["--Model.tags", "a b c", "--Model.dim=8"],
+                "expected": "tags=['a', 'b', 'c'],dim=8",
+            },
+        ],
+    )
 
 
 @requires_pep604
@@ -273,18 +305,21 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults",
-            "args": [],
-            "expected": "source=None,legacy=None",
-        },
-        {
-            "name": "cli_strings_pass_through",
-            "args": ["--func.source=/tmp/audio.wav", "--func.legacy=conf/base.yml"],
-            "expected": "source='/tmp/audio.wav',legacy='conf/base.yml'",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults",
+                "args": [],
+                "expected": "source=None,legacy=None",
+            },
+            {
+                "name": "cli_strings_pass_through",
+                "args": ["--func.source=/tmp/audio.wav", "--func.legacy=conf/base.yml"],
+                "expected": "source='/tmp/audio.wav',legacy='conf/base.yml'",
+            },
+        ],
+    )
 
 
 @requires_pep604
@@ -371,20 +406,23 @@ if __name__ == "__main__":
     with argbind.scope(args, 'val'):
         create_dataset()
 """
-    check_cases(source, [
-        {
-            "name": "scoped_overrides",
-            "args": [
-                "--train/create_dataset.batch_size=32",
-                "--val/create_dataset.batch_size=8",
-                "--create_dataset.sources", "a b",
-            ],
-            "expected": (
-                "batch_size=32,sources=['a', 'b']\n"
-                "batch_size=8,sources=['a', 'b']"
-            ),
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "scoped_overrides",
+                "args": [
+                    "--train/create_dataset.batch_size=32",
+                    "--val/create_dataset.batch_size=8",
+                    "--create_dataset.sources",
+                    "a b",
+                ],
+                "expected": (
+                    "batch_size=32,sources=['a', 'b']\nbatch_size=8,sources=['a', 'b']"
+                ),
+            },
+        ],
+    )
 
 
 def test_legacy_typing_unchanged():
@@ -407,19 +445,29 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults",
-            "args": [],
-            "expected": "ints=None,d=None,s=None,t=None",
-        },
-        {
-            "name": "cli_overrides",
-            "args": ["--func.ints", "1 2", "--func.d", "k=v",
-                     "--func.s=hello", "--func.t", "3 x"],
-            "expected": "ints=[1, 2],d={'k': 'v'},s='hello',t=(3, 'x')",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults",
+                "args": [],
+                "expected": "ints=None,d=None,s=None,t=None",
+            },
+            {
+                "name": "cli_overrides",
+                "args": [
+                    "--func.ints",
+                    "1 2",
+                    "--func.d",
+                    "k=v",
+                    "--func.s=hello",
+                    "--func.t",
+                    "3 x",
+                ],
+                "expected": "ints=[1, 2],d={'k': 'v'},s='hello',t=(3, 'x')",
+            },
+        ],
+    )
 
 
 def test_pep563_future_annotations():
@@ -450,19 +498,26 @@ if __name__ == "__main__":
     with argbind.scope(args):
         func()
 """
-    check_cases(source, [
-        {
-            "name": "defaults",
-            "args": [],
-            "expected": "enabled=True,num_tries=8,loudness_cutoff=-40.0,name='uniform'",
-        },
-        {
-            "name": "cli_overrides_are_typed",
-            "args": ["--func.enabled=0", "--func.num_tries=3",
-                     "--func.loudness_cutoff=-12.5", "--func.name=bias"],
-            "expected": "enabled=False,num_tries=3,loudness_cutoff=-12.5,name='bias'",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {
+                "name": "defaults",
+                "args": [],
+                "expected": "enabled=True,num_tries=8,loudness_cutoff=-40.0,name='uniform'",
+            },
+            {
+                "name": "cli_overrides_are_typed",
+                "args": [
+                    "--func.enabled=0",
+                    "--func.num_tries=3",
+                    "--func.loudness_cutoff=-12.5",
+                    "--func.name=bias",
+                ],
+                "expected": "enabled=False,num_tries=3,loudness_cutoff=-12.5,name='bias'",
+            },
+        ],
+    )
 
 
 @requires_pep604
@@ -482,14 +537,17 @@ if __name__ == "__main__":
     with argbind.scope(args):
         Model()
 """
-    check_cases(source, [
-        {"name": "defaults", "args": [], "expected": "tags=None,dim=None"},
-        {
-            "name": "cli_overrides",
-            "args": ["--Model.tags", "a b c", "--Model.dim=8"],
-            "expected": "tags=['a', 'b', 'c'],dim=8",
-        },
-    ])
+    check_cases(
+        source,
+        [
+            {"name": "defaults", "args": [], "expected": "tags=None,dim=None"},
+            {
+                "name": "cli_overrides",
+                "args": ["--Model.tags", "a b c", "--Model.dim=8"],
+                "expected": "tags=['a', 'b', 'c'],dim=8",
+            },
+        ],
+    )
 
 
 def test_pep563_unresolvable_annotation_is_yaml_only():
