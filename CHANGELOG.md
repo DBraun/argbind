@@ -1,4 +1,14 @@
 # Changelog
+## [0.6.0] - Unreleased
+- **Breaking:** bound functions and classes no longer silently drop keyword arguments that
+  are not in their signature. An invalid keyword now raises the function's natural
+  `TypeError` (`got an unexpected keyword argument ...`), and a bound callable that declares
+  `**kwargs` now actually receives the extra keyword arguments (previously they were
+  stripped before the call). Code that relied on the old behavior — e.g. splatting a whole
+  argbind namespace dict into a bound `__init__` (`Trainer(model=model, args=args, **args)`)
+  — should stop passing the extras; scope-bound values are unaffected and still resolve the
+  same way.
+
 ## [0.5.2] - 2026-06-30
 First release as an extended fork of [pseeth/argbind](https://github.com/pseeth/argbind),
 published to PyPI as **`argbind-dbraun`** (`pip install argbind-dbraun`). The import name is

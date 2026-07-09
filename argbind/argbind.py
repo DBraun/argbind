@@ -177,8 +177,13 @@ def bind(
                 if key not in kwargs:
                     cmd_args.append(arg)
 
-            # Ensure dictionary order is in parameter order
-            kwargs = {k: kwargs[k] for k, _ in parameters if k in kwargs}
+            # Ensure dictionary order is in parameter order, keeping any keys
+            # that are not parameters: the wrapped function raises its natural
+            # TypeError for an invalid keyword argument, or receives extras
+            # through its own **kwargs.
+            ordered = {k: kwargs[k] for k, _ in parameters if k in kwargs}
+            extras = {k: v for k, v in kwargs.items() if k not in ordered}
+            kwargs = {**ordered, **extras}
 
             if "args.debug" not in ARGS:
                 ARGS["args.debug"] = False
