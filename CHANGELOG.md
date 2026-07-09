@@ -1,5 +1,10 @@
 # Changelog
-## [0.6.0] - Unreleased
+
+## Unreleased
+
+-
+
+## [0.6.0] - 2026-07-09
 - **Breaking:** bound functions and classes no longer silently drop keyword arguments that
   are not in their signature. An invalid keyword now raises the function's natural
   `TypeError` (`got an unexpected keyword argument ...`), and a bound callable that declares
