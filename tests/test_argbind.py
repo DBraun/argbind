@@ -76,3 +76,53 @@ def test_extra_kwargs_reach_var_keyword():
     # Scope-bound values and passthrough extras compose.
     with argbind.scope({"collect.a": 5}):
         assert collect(extra=3) == (5, {"extra": 3})
+
+
+@argbind.bind()
+class Gadget:
+    """Module-level helper class for the inheritance double-wrap tests."""
+
+    def __init__(self, x: int = 1, **kwargs):
+        self.x = x
+        self.kwargs = kwargs
+
+
+@argbind.bind()
+class SubGadget(Gadget):
+    """Bound subclass with no __init__ of its own: bind monkey-patches
+    Gadget's already-wrapped __init__ onto it and wraps it a second time."""
+
+
+@argbind.bind()
+class StrictGadget:
+    """Module-level helper class without **kwargs for the double-wrap tests."""
+
+    def __init__(self, y: int = 1):
+        self.y = y
+
+
+@argbind.bind()
+class StrictSubGadget(StrictGadget):
+    """Bound subclass of a bound class that does not accept **kwargs."""
+
+
+def test_extra_kwargs_flow_through_inherited_double_wrap():
+    """Extra keyword arguments pass through both wrappers of an inherited,
+    doubly-wrapped __init__ and land in the real **kwargs."""
+    gadget = SubGadget(x=2, extra="hi")
+    assert gadget.x == 2
+    assert gadget.kwargs == {"extra": "hi"}
+
+    # Scope-bound values and passthrough extras compose across both wrappers.
+    with argbind.scope({"SubGadget.x": 9}):
+        gadget = SubGadget(extra=1)
+        assert gadget.x == 9
+        assert gadget.kwargs == {"extra": 1}
+
+
+def test_unknown_kwarg_raises_type_error_through_inherited_double_wrap():
+    """An unknown keyword argument raises the natural TypeError even when the
+    bound class inherits an already-wrapped __init__ from a bound parent."""
+    assert StrictSubGadget(y=2).y == 2
+    with pytest.raises(TypeError, match="nope"):
+        StrictSubGadget(y=2, nope=3)

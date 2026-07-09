@@ -11,7 +11,8 @@
 > adds new features — modern type annotations (PEP 585/604), `Literal` and flexible boolean
 > handling, dataclass `default_factory`, and YAML `$include` — published on PyPI as
 > [`argbind-dbraun`](https://pypi.org/project/argbind-dbraun/). The import name is unchanged
-> (`import argbind`), so it remains a drop-in replacement.
+> (`import argbind`), so it remains a drop-in replacement (see the
+> [CHANGELOG](./CHANGELOG.md) for intentional behavior differences).
 
 *ArgBind is a simple way to bind function or class arguments to the command line or to .yml files!*
 It supports scoping of arguments, similar to other frameworks like
